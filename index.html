@@ -252,7 +252,7 @@ body{background:var(--bg);display:flex;height:100vh;overflow:hidden;}
     <div style="text-align:center;margin-bottom:4px"><div style="font-size:23px;font-weight:800;color:#16294d;letter-spacing:1px">Jusoor</div><div style="font-size:10px;color:#6b7790;letter-spacing:4px">DIABETES CARE</div></div>
     <div style="font-size:12px;color:#6b7790;text-align:center;margin:12px 0 18px">Sign in to the care platform</div>
     <label style="font-size:11px;font-weight:700;color:#1b2436">Role</label>
-    <select id="lg-role" onchange="lgNames()" style="width:100%;padding:9px;border:1px solid #e3e8f2;border-radius:8px;margin:4px 0 12px;font-size:13px"><option selected>Physician</option><option>Nurse</option><option>Diabetes Educator</option><option>Care Coordinator</option></select>
+    <select id="lg-role" onchange="lgNames()" style="width:100%;padding:9px;border:1px solid #e3e8f2;border-radius:8px;margin:4px 0 12px;font-size:13px"><option selected>Physician</option><option>Nurse</option><option>Diabetes Educator</option></select>
     <label style="font-size:11px;font-weight:700;color:#1b2436">Name</label>
     <select id="lg-name" style="width:100%;padding:9px;border:1px solid #e3e8f2;border-radius:8px;margin:4px 0 12px;font-size:13px"></select>
     <label style="font-size:11px;font-weight:700;color:#1b2436">Password</label>
@@ -339,7 +339,6 @@ body{background:var(--bg);display:flex;height:100vh;overflow:hidden;}
 
     <!-- ═══ OVERVIEW DASHBOARD ═══════════════════════════ -->
     <div class="view on" id="v-ov">
-      <div id="ov-targets"></div>
       <div class="krow">
         <div class="kpi" style="--kc:var(--bl)" onclick="filterPts('')" title="All patients">
           <div style="position:absolute;top:0;left:0;right:0;height:3px;background:var(--bl);border-radius:10px 10px 0 0"></div>
@@ -565,7 +564,6 @@ body{background:var(--bg);display:flex;height:100vh;overflow:hidden;}
         <div class="card cp" style="cursor:pointer" onclick="setCoord('msgs')"><div class="kv" id="co-msgs" style="color:var(--te)">0</div><div class="kl">Messages to Physician</div></div>
         <div class="card cp" style="cursor:pointer" onclick="setCoord('reply')"><div class="kv" id="co-reply" style="color:var(--am)">0</div><div class="kl">Awaiting Reply</div></div>
       </div>
-      <div class="card cp" style="margin-bottom:16px"><div class="ct" style="margin-bottom:4px">Lost to follow-up — no contact ≥ 90 days <span id="co-ltfu-n" class="risk-badge rH" style="margin-left:6px">0</span></div><div style="font-size:10.5px;color:var(--mu);margin-bottom:8px">One-click Arabic recall via SMS / WhatsApp · “Contacted” updates the record and removes the patient from the queue · each recall raises a follow-up Call task in Care Tasks</div><div id="co-ltfu" style="max-height:300px;overflow:auto"></div><div id="co-outlog" style="margin-top:8px"></div></div>
       <div class="g2" style="gap:16px">
         <div class="card cp"><div class="ct" style="margin-bottom:10px">My patients — open file &amp; contact physician</div><div id="co-list" style="max-height:560px;overflow:auto"></div></div>
         <div class="card cp"><div class="ct" style="margin-bottom:10px">Conversations with physicians</div><div id="co-threads" style="max-height:560px;overflow:auto"></div></div>
@@ -907,7 +905,7 @@ function nav(id,el){
 }
 
 /* ─── OVERVIEW ─────────────────────────────────────── */
-function doOv(){try{ovTargets();}catch(e){}
+function doOv(){
   try{if(typeof doRegCharts==='function')doRegCharts(PTS);}catch(e){}
   var h=PTS.filter(function(p){return p.risk==='H';}).length;
   var m=PTS.filter(function(p){return p.risk==='M';}).length;
@@ -1275,7 +1273,7 @@ var LABS=['HbA1c','Fasting blood glucose','Lipid profile (TC/LDL/HDL/TG)','Renal
 var _labsId=null;
 function wlLabs(id){_labsId=id;var p=PTS.find(function(x){return x.id===id;});var b=$('labs-body');if(!b)return;b.innerHTML='<div style="font-size:12px;color:var(--mu);margin-bottom:10px">For <b>'+(p?p.name:'')+'</b> — tick the investigations to request</div>'+LABS.map(function(t){var pre=/HbA1c|Lipid|Renal|ACR/.test(t)?' checked':'';return '<label style="display:flex;align-items:center;gap:9px;padding:6px 0;font-size:12.5px;border-bottom:1px solid var(--bdr)"><input type="checkbox" class="lab-cb" value="'+t+'"'+pre+'>'+t+'</label>';}).join('');openModal('labs-modal');}
 function confirmLabs(){var sel=[].slice.call(document.querySelectorAll('.lab-cb:checked')).map(function(c){return c.value;});if(!sel.length){toast('Select at least one test','');return;}var p=PTS.find(function(x){return x.id===_labsId;});if(p){p.labsRequested=p.labsRequested||[];p.labsRequested.push({date:new Date().toISOString().split('T')[0],tests:sel});}if(p&&typeof addTask==='function')addTask(_labsId,'Investigations',sel.join(', '));closeModal('labs-modal');toast('Blood tests requested',sel.length+' test(s) ordered'+(p?' for '+p.name:''));}
-function doCoord(){coLtfu();
+function doCoord(){
   var hi=PTS.filter(function(p){return p.risk==='H';}).length;var msgs=0,awaiting=0;
   PTS.forEach(function(p){(p.teamMsgs||[]).forEach(function(m){if(m.role==='Care Coordinator')msgs++;});});
   var withT=PTS.filter(function(p){return (p.teamMsgs||[]).length;});
@@ -1328,7 +1326,7 @@ function huRender(){
     detail='<div class="card cp"><div style="display:flex;justify-content:space-between;align-items:flex-start"><div><div style="font-weight:800;font-size:15px">'+p.name+' <span class="type-badge '+p.dm_type+'">'+p.dm_type+'</span> <span class="risk-badge r'+p.risk+'">'+({H:'High',M:'Mod',L:'Low'}[p.risk])+'</span></div><div style="font-size:11px;color:var(--mu);margin-top:2px">'+p.age+'y '+p.sex+' · '+p.centre+' · '+p.doctor+'</div></div><button class="btn btn-o btn-xs" onclick="openPt(\''+p.id+'\')">Full file →</button></div>'
       +'<div style="display:flex;gap:14px;flex-wrap:wrap;margin:10px 0;padding:10px;background:var(--bg);border-radius:9px;font-size:12px"><span><b style="color:'+(p.hba1c>9?'var(--rd)':p.hba1c>7.5?'var(--am)':'var(--gr)')+'">'+p.hba1c+'%</b> HbA1c</span><span><b>'+p.sbp+'/'+p.dbp+'</b> BP</span><span><b>'+p.egfr+'</b> eGFR</span><span><b>'+p.bmi+'</b> BMI</span><span><b>'+(p.acr||0)+'</b> ACR</span></div>'
       +(p.alerts&&p.alerts.length?'<div style="font-size:11px;color:var(--rd);margin-bottom:8px">⚠ '+p.alerts[0]+'</div>':'')
-      +huCoordBrief(p)+'<div style="font-size:10px;font-weight:700;text-transform:uppercase;color:var(--mu);margin-bottom:4px">Round discussion · physician ↔ nurse ↔ coordinator</div>'
+      +'<div style="font-size:10px;font-weight:700;text-transform:uppercase;color:var(--mu);margin-bottom:4px">Round discussion · physician ↔ nurse</div>'
       +'<div style="max-height:220px;overflow:auto;border-top:1px solid var(--bdr);border-bottom:1px solid var(--bdr);padding:8px 0;margin-bottom:8px">'+thread+'</div>'
       +'<div style="display:flex;gap:8px;margin-bottom:12px"><input id="hu-msg" placeholder="Message as '+me+'…" onkeydown="if(event.key===&quot;Enter&quot;)huPost(\''+p.id+'\')" style="flex:1;padding:9px;border:1px solid var(--bdr);border-radius:8px;font-size:12px;font-family:inherit"><button class="btn btn-p btn-sm" onclick="huPost(\''+p.id+'\')">Send</button></div>'
       +'<div style="font-size:10px;font-weight:700;text-transform:uppercase;color:var(--mu);margin:4px 0 6px">Add to to-do list</div><div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:10px">'+taskBtns(p.id)+'</div><div style="font-size:10px;font-weight:700;text-transform:uppercase;color:var(--mu);margin-bottom:6px">Disposition for the round</div><div style="display:flex;gap:7px;flex-wrap:wrap"><button class="btn btn-g btn-sm" onclick="huDispo(\''+p.id+'\',\'Discussed — continue plan\')">✓ Discussed</button><button class="btn btn-o btn-sm" onclick="huDispo(\''+p.id+'\',\'Nurse to call today\')">📞 Nurse to call</button><button class="btn btn-o btn-sm" onclick="huDispo(\''+p.id+'\',\'MD to review medications\')">💊 MD review meds</button><button class="btn btn-o btn-sm" onclick="huDispo(\''+p.id+'\',\'Referred to educator\')">📚 Educator</button><button class="btn btn-p btn-sm" onclick="huNext()">⏭ Next</button></div></div>';
@@ -1340,7 +1338,7 @@ function huRender(){
 function saveTodo(){try{localStorage.setItem('jd_todo',JSON.stringify(window.TODO||[]));}catch(e){}}
 function loadTodo(){try{window.TODO=JSON.parse(localStorage.getItem('jd_todo')||'[]');}catch(e){window.TODO=[];}}
 function updTaskBadge(){var n=(window.TODO||[]).filter(function(t){return t.status==='open';}).length;var b=$('nb-tasks');if(b)b.textContent=n;}
-function addTask(pid,type,note){var p=PTS.find(function(x){return x.id===pid;});if(!p)return;var u=currentUser()||{role:'Care Coordinator',name:'Coordinator'};window.TODO=window.TODO||[];window.TODO.push({id:'T'+Date.now()+Math.floor(Math.random()*999),pid:pid,pname:p.name,dm:p.dm_type,type:type,note:note||'',by:u.name,role:u.role,date:new Date().toISOString().split('T')[0],status:'open',assignee:'',due:taskDefDue()});saveTodo();updTaskBadge();toast(type+' added to to-do','For '+p.name);var v=$('v-tasks');if(v&&v.classList.contains('on'))doTasks();}
+function addTask(pid,type,note){var p=PTS.find(function(x){return x.id===pid;});if(!p)return;var u=currentUser()||{role:'Care Coordinator',name:'Coordinator'};window.TODO=window.TODO||[];window.TODO.push({id:'T'+Date.now()+Math.floor(Math.random()*999),pid:pid,pname:p.name,dm:p.dm_type,type:type,note:note||'',by:u.name,role:u.role,date:new Date().toISOString().split('T')[0],status:'open'});saveTodo();updTaskBadge();toast(type+' added to to-do','For '+p.name);var v=$('v-tasks');if(v&&v.classList.contains('on'))doTasks();}
 function taskBtns(id){return [['Message','✉'],['Call','📞'],['Appointment','📅'],['Investigations','🩸'],['MD review','💊'],['Educator','📚']].map(function(x){return '<button class="btn btn-o btn-xs" title="'+x[0]+'" onclick="event.stopPropagation();taskAction(\''+id+'\',\''+x[0]+'\')">'+x[1]+'</button>';}).join('');}
 function taskAction(id,type){
   if(type==='Investigations'){if(typeof wlLabs==='function'){wlLabs(id);return;}}
@@ -1354,42 +1352,13 @@ function delTask(tid){window.TODO=(window.TODO||[]).filter(function(x){return x.
 function doTasks(){var el=$('tasks-body');if(!el)return;var T=window.TODO||[];var open=T.filter(function(t){return t.status==='open';}),done=T.filter(function(t){return t.status==='done';});
   if($('tk-open'))$('tk-open').textContent=open.length;if($('tk-done'))$('tk-done').textContent=done.length;
   var icon={Message:'✉',Call:'📞',Appointment:'📅',Investigations:'🩸','MD review':'💊',Educator:'📚'};
-  function rowHtml(t){return '<div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--bdr)"><span style="font-size:16px">'+(icon[t.type]||'•')+'</span><div style="flex:1"><div style="font-size:12.5px;font-weight:700">'+t.type+' — '+t.pname+' <span class="type-badge '+t.dm+'">'+t.dm+'</span></div><div style="font-size:10px;color:var(--mu)">'+(t.note?t.note+' · ':'')+'by '+t.by+' ('+t.role+') · '+t.date+'</div></div>'+taskCtl(t)+'<button class="btn btn-o btn-xs" onclick="openPt(\''+t.pid+'\')">Open</button><button class="btn '+(t.status==='open'?'btn-g':'btn-o')+' btn-xs" onclick="doneTask(\''+t.id+'\')">'+(t.status==='open'?'✓ Done':'↺ Reopen')+'</button><button class="btn btn-o btn-xs" title="Remove" onclick="delTask(\''+t.id+'\')">✕</button></div>';}
-  el.innerHTML='<div style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--rd);margin:4px 0 6px">Open ('+open.length+')'+taskOvHdr(open)+'</div>'+(open.length?open.map(rowHtml).join(''):'<div style="font-size:12px;color:var(--gr);padding:8px">✓ Nothing outstanding.</div>')+'<div style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--mu);margin:16px 0 6px">Completed ('+done.length+')</div>'+(done.length?done.map(rowHtml).join(''):'<div style="font-size:12px;color:var(--mu);padding:8px">None yet.</div>');
+  function rowHtml(t){return '<div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--bdr)"><span style="font-size:16px">'+(icon[t.type]||'•')+'</span><div style="flex:1"><div style="font-size:12.5px;font-weight:700">'+t.type+' — '+t.pname+' <span class="type-badge '+t.dm+'">'+t.dm+'</span></div><div style="font-size:10px;color:var(--mu)">'+(t.note?t.note+' · ':'')+'by '+t.by+' ('+t.role+') · '+t.date+'</div></div><button class="btn btn-o btn-xs" onclick="openPt(\''+t.pid+'\')">Open</button><button class="btn '+(t.status==='open'?'btn-g':'btn-o')+' btn-xs" onclick="doneTask(\''+t.id+'\')">'+(t.status==='open'?'✓ Done':'↺ Reopen')+'</button><button class="btn btn-o btn-xs" title="Remove" onclick="delTask(\''+t.id+'\')">✕</button></div>';}
+  el.innerHTML='<div style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--rd);margin:4px 0 6px">Open ('+open.length+')</div>'+(open.length?open.map(rowHtml).join(''):'<div style="font-size:12px;color:var(--gr);padding:8px">✓ Nothing outstanding.</div>')+'<div style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--mu);margin:16px 0 6px">Completed ('+done.length+')</div>'+(done.length?done.map(rowHtml).join(''):'<div style="font-size:12px;color:var(--mu);padding:8px">None yet.</div>');
 }
 (function(){loadTodo();try{updTaskBadge();}catch(e){}})();
 
 function saveEduSession(){var id=$('edu-pt')&&$('edu-pt').value;if(!id){toast('Select patient','');return;}var p=PTS.find(function(x){return x.id===id;});if(!p)return;p.sessions.push({date:new Date().toISOString().split('T')[0],type:$('edu-type')&&$('edu-type').value,notes:($('edu-notes')&&$('edu-notes').value)||'',dur:($('edu-dur')&&$('edu-dur').value)||45});doEdu();toast('Session saved','Education session for '+p.name+' logged');}
 
-
-
-/* ───────── round 3: coordinator briefing · task assignment · LTFU recall · programme targets ───────── */
-function huCoordBrief(p){var cm=(p.teamMsgs||[]).filter(function(m){return /Coordinator/.test(m.role||'');});var last=cm[cm.length-1];
-  return '<div style="background:#fdf6e3;border:1px solid #e8d9a8;border-radius:9px;padding:9px 11px;margin-bottom:10px"><div style="font-size:10px;font-weight:700;text-transform:uppercase;color:#8a6d1d;margin-bottom:3px">📋 Coordinator briefing</div>'+(last?'<div style="font-size:12px"><b>'+last.from+'</b> <span style="color:var(--mu);font-size:10px">'+last.role+' · '+last.date+'</span><div style="margin-top:2px">'+last.text+'</div></div>':'<div style="font-size:11px;color:var(--mu)">No coordinator note yet — sign in as Care Coordinator and post below; it will be pinned here for the round.</div>')+'</div>';}
-function taskDefDue(){var d=new Date();d.setDate(d.getDate()+7);return d.toISOString().split('T')[0];}
-function TEAM_ALL(){var a=[];for(var k in ROLE_NAMES){ROLE_NAMES[k].forEach(function(n){a.push(n);});}return a;}
-function taskOver(t){return t.status==='open'&&t.due&&t.due<new Date().toISOString().split('T')[0];}
-function taskCtl(t){var sel='<select onchange="taskAssign(\''+t.id+'\',this.value)" style="padding:5px 7px;border:1px solid var(--bdr);border-radius:7px;font-size:10.5px;max-width:135px;font-family:inherit"><option value="">— assign —</option>'+TEAM_ALL().map(function(n){return '<option'+(t.assignee===n?' selected':'')+'>'+n+'</option>';}).join('')+'</select>';
-  var due='<input type="date" value="'+(t.due||'')+'" onchange="taskDue(\''+t.id+'\',this.value)" style="padding:4px 6px;border:1px solid '+(taskOver(t)?'var(--rd)':'var(--bdr)')+';border-radius:7px;font-size:10.5px;font-family:inherit">';
-  return sel+due+(taskOver(t)?'<span style="font-size:9px;font-weight:800;color:var(--rd)">OVERDUE</span>':'');}
-function taskOvHdr(open){var n=open.filter(taskOver).length;return n?' · <span style="color:var(--rd)">'+n+' overdue</span>':'';}
-function taskAssign(id,v){var t=(window.TODO||[]).find(function(x){return x.id===id;});if(t){t.assignee=v;saveTodo();doTasks();toast('Task assigned',v||'Unassigned');}}
-function taskDue(id,v){var t=(window.TODO||[]).find(function(x){return x.id===id;});if(t){t.due=v;saveTodo();doTasks();}}
-function ptDays(p){if(!p._lc){var i=PTS.indexOf(p);var d=new Date();d.setDate(d.getDate()-((i*37)%160+5));p._lc=d.toISOString().split('T')[0];}return Math.round((Date.now()-new Date(p._lc).getTime())/864e5);}
-function coLtfu(){var el=$('co-ltfu');if(!el)return;var q=PTS.filter(function(p){return ptDays(p)>=90;}).sort(function(a,b){return ptDays(b)-ptDays(a);});if($('co-ltfu-n'))$('co-ltfu-n').textContent=q.length;
-  el.innerHTML=q.length?q.map(function(p){return '<div style="display:flex;gap:9px;align-items:center;padding:8px 0;border-bottom:1px solid var(--bdr)"><div style="flex:1"><div style="font-weight:700;font-size:12.5px">'+p.name+' <span class="type-badge '+p.dm_type+'">'+p.dm_type+'</span></div><div style="font-size:10px;color:var(--mu)">'+p.centre+' · '+p.doctor+'</div></div><b style="color:var(--rd);font-size:13px" title="days since last contact">'+ptDays(p)+'d</b><span class="risk-badge r'+p.risk+'">'+({H:'High',M:'Mod',L:'Low'}[p.risk])+'</span><button class="btn btn-o btn-xs" onclick="coRecall(\''+p.id+'\',\'SMS\')">SMS</button><button class="btn btn-o btn-xs" onclick="coRecall(\''+p.id+'\',\'WhatsApp\')">WhatsApp</button><button class="btn btn-g btn-xs" onclick="coContacted(\''+p.id+'\')">✓ Contacted</button></div>';}).join(''):'<div style="font-size:12px;color:var(--gr);padding:8px">✓ No patients lost to follow-up.</div>';
-  var log=window.OUTLOG||[];var lg=$('co-outlog');if(lg)lg.innerHTML=log.length?'<div style="font-size:10px;font-weight:700;text-transform:uppercase;color:var(--mu);margin-bottom:4px">Recent recalls</div>'+log.slice(0,5).map(function(o){return '<div style="font-size:10.5px;color:var(--mu);margin:2px 0">'+o.at+' · '+o.channel+' → <b>'+o.name+'</b> · <span dir="rtl">'+o.text+'</span></div>';}).join(''):'';}
-function coRecall(pid,channel){var p=PTS.find(function(x){return x.id===pid;});if(!p)return;var first=p.name.split(' ')[0];
-  var txt='عزيزي/عزيزتي '+first+'، لاحظنا انقطاعك عن المتابعة في مركزك الصحي. صحتك تهمنا — نرجو التواصل لحجز موعد. فريق جسور';
-  window.OUTLOG=window.OUTLOG||[];window.OUTLOG.unshift({at:new Date().toTimeString().slice(0,5),channel:channel,name:p.name,text:txt});
-  addTask(pid,'Call','Recall sent via '+channel+' — confirm appointment booked');coLtfu();toast(channel+' recall queued',p.name);}
-function coContacted(pid){var p=PTS.find(function(x){return x.id===pid;});if(!p)return;p._lc=new Date().toISOString().split('T')[0];coLtfu();toast('Contact recorded',p.name+' · today');}
-function ovTargets(){var el=$('ov-targets');if(!el)return;var n=PTS.length||1;
-  var at=Math.round(PTS.filter(function(p){return p.hba1c<7;}).length/n*100);
-  var lt=Math.round(PTS.filter(function(p){return ptDays(p)>=90;}).length/n*100);
-  var sc=Math.round(PTS.filter(function(p){return p.scr&&p.scr.ret&&p.scr.ret.done;}).length/n*100);
-  function bar(label,val,target,dir,color){var ok=dir==='up'?val>=target:val<=target;return '<div style="flex:1;min-width:185px"><div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:3px"><b>'+label+'</b><span>'+val+'% <span style="color:var(--mu)">/ '+(dir==='up'?'≥':'≤')+' '+target+'%</span> '+(ok?'<b style="color:var(--gr)">✓</b>':'')+'</span></div><div style="height:7px;background:#eef1f6;border-radius:5px;overflow:hidden"><div style="width:'+Math.min(100,val)+'%;height:100%;background:'+color+'"></div></div></div>';}
-  el.innerHTML='<div class="card cp" style="margin-bottom:16px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:9px;flex-wrap:wrap;gap:6px"><div class="ct" style="margin:0">Programme targets — value-based care</div><span style="font-size:10px;color:var(--mu)">Vision 2030 · Health Sector Transformation · HCC PHC cluster</span></div><div style="display:flex;gap:18px;flex-wrap:wrap">'+bar('HbA1c at target (&lt;7%)',at,60,'up','var(--gr)')+bar('Lost to follow-up (≥90d)',lt,10,'down','var(--rd)')+bar('Retinal screening done',sc,80,'up','var(--te)')+'</div></div>';}
 
 </script>
 </body>
