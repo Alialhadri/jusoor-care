@@ -1315,6 +1315,12 @@ function freshenDates(){var T=Date.now();function past(d){return new Date(T-d*86
     if(p.last&&p.last<'2026-01')p.last=past((idx%8)*7+3);
     ['ret','foot','kid','card','neuro'].forEach(function(k){var sc=p.scr&&p.scr[k];if(sc&&sc.date&&sc.date<'2026-01')sc.date=past((idx%10)*20+30);});
     (p.teamMsgs||[]).forEach(function(m,j){if(m.date&&m.date<'2026-01')m.date=past(j*2+1);});
+    (p.sessions||[]).forEach(function(x,j){if(x.date&&x.date<'2026-01')x.date=past((idx%6)*10+j*7+5);});
+    (p.goals||[]).forEach(function(g,j){if(g.date&&g.date<'2026-01')g.date=new Date(T+((idx%4)*14+(j+1)*30)*86400000).toISOString().split('T')[0];});
+    (p.referrals||[]).forEach(function(r,j){if(r.date&&r.date<'2026-01')r.date=past(j*3+2);(r.replies||[]).forEach(function(q,k){if(q.date&&q.date<'2026-01')q.date=past(j*3+1+k);});});
+    (p.contacts||[]).forEach(function(c,j){if(c.date&&c.date<'2026-01')c.date=past(j*5+4);});
+    (p.labsRequested||[]).forEach(function(l,j){if(l.date&&l.date<'2026-01')l.date=past(j*6+6);});
+    (p.msgs||[]).forEach(function(m,j){if(m.date&&m.date<'2026-01')m.date=past(j*4+3);});
   });}
 function eduSelect(pid){closeModal('edu-modal');nav('edu',document.querySelector('[data-view=edu]'));if($('edu-pt')){$('edu-pt').value=pid;eduSelChanged();}var e=$('edu-notes');if(e)e.focus();toast('Patient selected','Ready to log the session');}
 function eduDrill(kind){
