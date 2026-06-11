@@ -576,18 +576,18 @@ body{background:var(--bg);display:flex;height:100vh;overflow:hidden;}
 
     <div class="view" id="v-tasks">
       <div class="g4" style="margin-bottom:16px">
-        <div class="card cp"><div class="kv" id="tk-open" style="color:var(--rd)">0</div><div class="kl">Open tasks</div></div>
-        <div class="card cp"><div class="kv" id="tk-done" style="color:var(--gr)">0</div><div class="kl">Completed</div></div>
+        <div class="card cp" style="cursor:pointer" onclick="var e=$('tk-sec-open');if(e)e.scrollIntoView({behavior:'smooth'})"><div class="kv" id="tk-open" style="color:var(--rd)">0</div><div class="kl">Open tasks</div><div class="kpi-hint">↗ View list</div></div>
+        <div class="card cp" style="cursor:pointer" onclick="var e=$('tk-sec-done');if(e)e.scrollIntoView({behavior:'smooth'})"><div class="kv" id="tk-done" style="color:var(--gr)">0</div><div class="kl">Completed</div><div class="kpi-hint">↗ View list</div></div>
       </div>
       <div class="card cp"><div class="ct" style="margin-bottom:8px">Care-team to-do list</div><div style="font-size:11px;color:var(--mu);margin-bottom:8px">Actions raised from the Morning Worklist and Morning Huddle land here so the team doesn't forget. Saved on this device.</div><div id="tasks-body"></div></div>
     </div>
 
     <div class="view" id="v-edu">
       <div class="g4" style="margin-bottom:14px">
-        <div class="card cp"><div class="kv" id="edu-total" style="color:var(--bl)">0</div><div class="kl">Active Caseload</div></div>
-        <div class="card cp"><div class="kv" id="edu-sess" style="color:var(--gr)">0</div><div class="kl">Sessions Done</div></div>
-        <div class="card cp"><div class="kv" id="edu-goals" style="color:var(--am)">0</div><div class="kl">Active Goals</div></div>
-        <div class="card cp"><div class="kv" id="edu-pend" style="color:var(--rd)">0</div><div class="kl">Education Pending</div></div>
+        <div class="card cp" style="cursor:pointer" onclick="eduDrill('case')"><div class="kv" id="edu-total" style="color:var(--bl)">0</div><div class="kl">Active Caseload</div><div class="kpi-hint">↗ View details</div></div>
+        <div class="card cp" style="cursor:pointer" onclick="eduDrill('sess')"><div class="kv" id="edu-sess" style="color:var(--gr)">0</div><div class="kl">Sessions Done</div><div class="kpi-hint">↗ View details</div></div>
+        <div class="card cp" style="cursor:pointer" onclick="eduDrill('goals')"><div class="kv" id="edu-goals" style="color:var(--am)">0</div><div class="kl">Active Goals</div><div class="kpi-hint">↗ View details</div></div>
+        <div class="card cp" style="cursor:pointer" onclick="eduDrill('pend')"><div class="kv" id="edu-pend" style="color:var(--rd)">0</div><div class="kl">Education Pending</div><div class="kpi-hint">↗ View details</div></div>
       </div>
       <div class="g2" style="gap:16px;margin-bottom:14px">
         <div class="card cp">
@@ -810,6 +810,14 @@ body{background:var(--bg);display:flex;height:100vh;overflow:hidden;}
   </div>
 </div>
 
+
+<!-- Education drill-down Modal -->
+<div class="overlay" id="edu-modal">
+  <div class="modal" style="max-width:760px">
+    <div class="mhd"><div class="mhd-t" id="edu-modal-title">Education details</div><button class="mcx" onclick="closeModal('edu-modal')">✕</button></div>
+    <div class="mbody" id="edu-modal-body"></div>
+  </div>
+</div>
 
 <!-- Virtual Clinic Tele-visit Modal -->
 <div class="overlay" id="vc-modal">
@@ -1262,6 +1270,36 @@ function setAnType(t){window.ANTYPE=t;document.querySelectorAll('.an-tab').forEa
 /* ───────── v2.1: AI drafting, goals list, value-based scorecard ───────── */
 async function aiDraftNote(){var id=$('edu-pt')&&$('edu-pt').value;if(!id){toast('Select a patient first','');return;}if(!aiOK()){toast('Connect AI in Settings','Secure proxy or API key');return;}var p=PTS.find(function(x){return x.id===id;});if(!p)return;var prev=$('edu-notes')?$('edu-notes').value:'';if($('edu-notes'))$('edu-notes').value='✦ Drafting personalised note…';try{var topics=suggestTopics(p).join(', ');var prompt='You are a diabetes nurse educator. Draft concise DSME session notes (5-7 short lines) in English. Cover topics covered, patient understanding, barriers, next-step plan. Patient (de-identified): '+p.dm_type+' DM, HbA1c '+p.hba1c+'%, BMI '+(p.bmi||'?')+', adherence '+(p.adh||'?')+'%, meds: '+(p.meds||[]).join('; ')+'. Priority needs: '+topics+'. Return plain text only, no preamble.';var r=await aiFetch({method:'POST',headers:{'Content-Type':'application/json','x-api-key':getKey(),'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:getAIModel(),max_tokens:1500,messages:[{role:'user',content:prompt}]})});var d=await r.json();if(d.error)throw new Error(d.error.message);var txt=(d.content&&d.content[0]&&d.content[0].text||'').trim();if($('edu-notes'))$('edu-notes').value=txt||prev;toast('AI note drafted','Review & edit before saving');}catch(e){if($('edu-notes'))$('edu-notes').value=prev;toast('AI error',''+e.message);}}
 async function aiDraftGoal(){var id=$('goal-pt')&&$('goal-pt').value;if(!id){toast('Select a patient first','');return;}if(!aiOK()){toast('Connect AI in Settings','');return;}var p=PTS.find(function(x){return x.id===id;});if(!p)return;var cat=($('goal-cat')&&$('goal-cat').value)||'diabetes self-management';var prev=$('goal-txt')?$('goal-txt').value:'';if($('goal-txt'))$('goal-txt').value='✦ Drafting…';try{var prompt='Write ONE SMART goal (specific, measurable, achievable, relevant, time-bound) as a single sentence, category "'+cat+'", for a de-identified patient: '+p.dm_type+' DM, HbA1c '+p.hba1c+'%, BMI '+(p.bmi||'?')+', adherence '+(p.adh||'?')+'%. Return only the goal sentence, no preamble or quotes.';var r=await aiFetch({method:'POST',headers:{'Content-Type':'application/json','x-api-key':getKey(),'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:getAIModel(),max_tokens:1000,messages:[{role:'user',content:prompt}]})});var d=await r.json();if(d.error)throw new Error(d.error.message);var txt=(d.content&&d.content[0]&&d.content[0].text||'').trim().replace(/^["']|["']$/g,'');if($('goal-txt'))$('goal-txt').value=txt||prev;if($('goal-date')&&!$('goal-date').value){$('goal-date').value=new Date(Date.now()+90*86400000).toISOString().split('T')[0];}toast('AI goal drafted','Review & click Set Goal');}catch(e){if($('goal-txt'))$('goal-txt').value=prev;toast('AI error',''+e.message);}}
+function eduSelect(pid){closeModal('edu-modal');nav('edu',document.querySelector('[data-view=edu]'));if($('edu-pt')){$('edu-pt').value=pid;eduSelChanged();}var e=$('edu-notes');if(e)e.focus();toast('Patient selected','Ready to log the session');}
+function eduDrill(kind){
+  var T={case:'Active Caseload — all enrolled patients',sess:'Sessions Done — education log',goals:'Goals — all patient goals',pend:'Education Pending — no session yet'}[kind];
+  $('edu-modal-title').textContent=T||'Education details';
+  var h='';
+  function row(p,mid,act){return '<div style="display:flex;align-items:center;gap:10px;padding:8px 4px;border-bottom:1px solid var(--bdr)">'
+    +'<div style="flex:1;min-width:0"><span style="font-size:12.5px;font-weight:700;cursor:pointer" onclick="closeModal(\'edu-modal\');openPt(\''+p.id+'\')">'+p.name+'</span> <span class="type-badge '+p.dm_type+'">'+p.dm_type+'</span>'
+    +'<div style="font-size:10px;color:var(--mu);margin-top:2px">'+mid+'</div></div>'+(act||'')+'</div>';}
+  if(kind==='case'){
+    h=PTS.map(function(p){return row(p,'HbA1c '+p.hba1c+'% · '+p.sessions.length+' session(s) · '+(p.goals||[]).length+' goal(s) · educator '+(p.educator||'—'),
+      '<button class="btn btn-o btn-xs" onclick="eduSelect(\''+p.id+'\')">Log session</button>');}).join('');
+  }else if(kind==='sess'){
+    var all=[];PTS.forEach(function(p){(p.sessions||[]).forEach(function(s){all.push({p:p,s:s});});});
+    all.sort(function(a,b){return (b.s.date||'').localeCompare(a.s.date||'');});
+    h=all.length?all.map(function(x){return row(x.p,esc(x.s.type||'Session')+' · '+(x.s.dur||45)+' min · '+(x.s.date||'')+(x.s.teachback==='Confirmed'?' · teach-back ✓':'')+(x.s.notes?' — '+esc(String(x.s.notes).slice(0,80)):''));}).join('')
+      :'<div style="font-size:12px;color:var(--mu);padding:14px;text-align:center">No sessions logged yet — they appear here the moment you save one.</div>';
+  }else if(kind==='goals'){
+    var ag=[];PTS.forEach(function(p){(p.goals||[]).forEach(function(g){ag.push({p:p,g:g});});});
+    h=ag.length?ag.map(function(x){return row(x.p,esc(x.g.cat||'')+' · '+esc(x.g.txt||'')+' · target '+(x.g.date||'—'),
+      '<span class="chip '+(x.g.done?'ch-g':'ch-a')+'">'+(x.g.done?'Done':'Active')+'</span>');}).join('')
+      :'<div style="font-size:12px;color:var(--mu);padding:14px;text-align:center">No goals yet — set one in “Set Patient Goal”.</div>';
+  }else if(kind==='pend'){
+    var pend=PTS.filter(function(p){return (p.sessions||[]).length===0;});
+    h='<div style="font-size:11px;color:var(--mu);margin-bottom:8px">These patients have had <b>no education session</b> yet. Click “Log session” to start one, or send it to the to-do list.</div>'
+     +pend.map(function(p){return row(p,'HbA1c '+p.hba1c+'% · risk '+({H:'High',M:'Moderate',L:'Low'}[p.risk]||'—')+' · educator '+(p.educator||'—'),
+      '<button class="btn btn-p btn-xs" onclick="eduSelect(\''+p.id+'\')">Log session</button><button class="btn btn-o btn-xs" onclick="addTask(\''+p.id+'\',\'Educator\',\'Education session needed\')">+ Task</button>');}).join('');
+  }
+  $('edu-modal-body').innerHTML='<div style="max-height:60vh;overflow:auto">'+h+'</div>';
+  openModal('edu-modal');
+}
 function renderGoals(){var el=$('goals-list');if(!el)return;var all=[];PTS.forEach(function(p){(p.goals||[]).forEach(function(g){all.push({p:p,g:g});});});if(!all.length){el.innerHTML='<div style="font-size:12px;color:var(--mu);text-align:center;padding:14px">No goals set yet. Use “Set Goal” above — they’ll appear here instantly.</div>';return;}el.innerHTML='<div class="tbl-w"><table class="tbl"><thead><tr><th>Patient</th><th>Category</th><th>SMART Goal</th><th>Target date</th><th>Status</th></tr></thead><tbody>'+all.map(function(x){var p=x.p,g=x.g;return '<tr><td style="font-weight:700">'+p.name+' <span class="type-badge '+p.dm_type+'">'+p.dm_type+'</span></td><td style="font-size:11px">'+(g.cat||'')+'</td><td style="font-size:11px">'+(g.txt||'')+'</td><td style="font-size:11px;color:var(--mu)">'+(g.date||'—')+'</td><td><span class="chip '+(g.done?'ch-g':'ch-a')+'">'+(g.done?'Done':'Active')+'</span></td></tr>';}).join('')+'</tbody></table></div>';}
 function doVBScore(AP){var n=AP.length||1;var control=AP.filter(function(p){return p.hba1c<(p.dm_type==='T1'?7:7.5);}).length;var t2=AP.filter(function(p){return p.dm_type==='T2';});var t2g=t2.filter(function(p){return p.meds.some(function(m){return /pagliflozin|semaglutide|liraglutide|dulaglutide/i.test(m);});}).length;var screen=AP.filter(function(p){return p.scr.ret.done;}).length;var se=AP.filter(function(p){return p.age>=40&&p.dm_type!=='GDM';});var statin=se.filter(function(p){return p.meds.some(function(m){return /statin|vastatin/i.test(m);});}).length;var alb=AP.filter(function(p){return (p.acr||0)>=30;});var raas=alb.filter(function(p){return p.meds.some(function(m){return /ramipril|lisinopril|valsartan|losartan|irbesartan/i.test(m);});}).length;var ltfu=AP.filter(function(p){return p.risk==='H'&&new Date()-new Date(p.last)>45*86400000;}).length;function pct(a,b){return b?Math.round(a/b*100):0;}var rows=[['Glycaemic control (HbA1c at target)',pct(control,n),60,true],['Guideline therapy in T2 (SGLT2i / GLP-1)',pct(t2g,t2.length||1),70,true],['Retinal screening coverage',pct(screen,n),80,true],['Statin in eligible (age ≥40)',pct(statin,se.length||1),80,true],['ACEi/ARB in albuminuria',pct(raas,alb.length||1),90,true],['Lost-to-follow-up (high risk)',pct(ltfu,n),10,false]];var el=$('vb-bars');if(el)el.innerHTML=rows.map(function(r){var label=r[0],v=r[1],tg=r[2],hi=r[3];var ok=hi?v>=tg:v<=tg;var col=ok?'var(--gr)':(hi?(v>=tg*0.7?'var(--am)':'var(--rd)'):(v<=tg*1.5?'var(--am)':'var(--rd)'));return '<div style="margin:11px 0"><div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px"><span>'+label+'</span><span><b style="color:'+col+'">'+v+'%</b> <span style="color:var(--mu);font-size:10px">target '+(hi?'≥':'≤')+tg+'%</span> '+(ok?'<span style="color:var(--gr)">✓</span>':'<span style="color:var(--rd)">▲</span>')+'</span></div><div style="position:relative;height:8px;background:var(--bdr);border-radius:5px"><div style="position:absolute;left:'+Math.min(100,tg)+'%;top:-3px;bottom:-3px;width:2px;background:var(--nv)"></div><div style="height:100%;width:'+Math.min(100,v)+'%;background:'+col+';border-radius:5px"></div></div></div>';}).join('');var avoided=Math.round(control*0.18);var perPt=14000;var gaps=AP.filter(function(p){return !p.scr.ret.done||p.hba1c>(p.dm_type==='T1'?7:7.5)||((p.acr||0)>=30&&!p.meds.some(function(m){return /ramipril|lisinopril|valsartan|losartan|irbesartan/i.test(m);}))||(p.dm_type==='T2'&&!p.meds.some(function(m){return /pagliflozin|semaglutide|liraglutide|dulaglutide/i.test(m);}));}).length;if($('vb-impact'))$('vb-impact').textContent=avoided;if($('vb-cost'))$('vb-cost').textContent=(avoided*perPt).toLocaleString();if($('vb-gaps'))$('vb-gaps').textContent=gaps;}
 
@@ -1626,9 +1664,9 @@ function doTasks(){var el=$('tasks-body');if(!el)return;var T=window.TODO||[];va
        +notes+'</div>';
     }).join('');
   }
-  el.innerHTML='<div style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--rd);margin:4px 0 8px">Open ('+open.length+') — grouped by patient</div>'
+  el.innerHTML='<div id="tk-sec-open" style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--rd);margin:4px 0 8px">Open ('+open.length+') — grouped by patient</div>'
    +(open.length?groupHtml(open):'<div style="font-size:12px;color:var(--gr);padding:8px">✓ Nothing outstanding.</div>')
-   +'<div style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--mu);margin:16px 0 8px">Completed ('+done.length+')</div>'
+   +'<div id="tk-sec-done" style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--mu);margin:16px 0 8px">Completed ('+done.length+')</div>'
    +(done.length?groupHtml(done):'<div style="font-size:12px;color:var(--mu);padding:8px">None yet.</div>');
 }
 function taskGo(tid){
