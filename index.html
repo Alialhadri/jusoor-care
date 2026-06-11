@@ -805,6 +805,15 @@ body{background:var(--bg);display:flex;height:100vh;overflow:hidden;}
   </div>
 </div>
 
+
+<!-- After-Visit Patient Summary Modal -->
+<div class="overlay" id="avs-modal">
+  <div class="modal" style="max-width:600px">
+    <div class="mhd"><div class="mhd-t">After-Visit Patient Summary · ملخص ما بعد الزيارة</div><button class="mcx" onclick="closeModal('avs-modal')">✕</button></div>
+    <div class="mbody" id="avs-body" style="background:#eef1f6"></div>
+  </div>
+</div>
+
 <div id="toast"><div id="t-msg"></div><div id="t-sub"></div></div>
 </body>
 </html>
@@ -996,7 +1005,7 @@ function openPt(id){
   var ti='';
   if((p.dm_type==='T1'||p.dm_type==='LADA')&&p.cp!==null){ti='<div class="card cp" style="background:var(--pul);border-color:#d8b4fe;margin-bottom:12px"><div style="font-size:10px;font-weight:700;color:var(--pu);text-transform:uppercase;margin-bottom:8px">Autoimmune Markers</div><div class="g3" style="gap:10px"><div><div style="font-size:10px;color:var(--mu)">C-Peptide</div><div style="font-size:16px;font-weight:800;color:'+(p.cp<0.6?'var(--rd)':'var(--tx)')+'">'+p.cp+' ng/mL</div></div><div><div style="font-size:10px;color:var(--mu)">GAD-65</div><div style="font-size:14px;font-weight:800;color:'+(p.gad65?'var(--rd)':'var(--gr)')+'">'+(p.gad65?'Positive':'Negative')+'</div></div><div><div style="font-size:10px;color:var(--mu)">IA-2</div><div style="font-size:14px;font-weight:800;color:'+(p.ia2?'var(--rd)':'var(--gr)')+'">'+(p.ia2?'Positive':'Negative')+'</div></div></div></div>';}
   if(p.dm_type==='GDM'&&p.ga){ti='<div class="card cp" style="background:var(--aml);border-color:#fbbf24;margin-bottom:12px"><div style="font-size:10px;font-weight:700;color:var(--am);text-transform:uppercase;margin-bottom:8px">Gestational Profile</div><div class="g3" style="gap:10px"><div><div style="font-size:10px;color:var(--mu)">Gestational Age</div><div style="font-size:20px;font-weight:800;color:var(--am)">'+p.ga+' wks</div></div>'+(p.ogtt?'<div><div style="font-size:10px;color:var(--mu)">OGTT (75g)</div><div style="font-size:11px;margin-top:3px">0h: '+p.ogtt.h0+' · 1h: '+p.ogtt.h1+' · 2h: '+p.ogtt.h2+' mmol/L</div></div>':'')+'<div><div style="font-size:10px;color:var(--mu)">Post-partum</div><div style="font-size:11px;margin-top:3px">OGTT at 6–12 wks</div></div></div></div>';}
-  var html='<div class="ph"><div class="ph-top"><div class="ph-av av'+p.dm_type+'">'+ini(p.name)+'</div><div style="flex:1"><div class="ph-name">'+p.name+'</div><div class="ph-meta"><span>'+p.age+'y · '+p.sex+'</span><span style="color:var(--bdr)">·</span><span>'+p.mrn+'</span><span style="color:var(--bdr)">·</span><span>'+p.centre+'</span><span style="color:var(--bdr)">·</span><span>'+p.doctor+'</span></div><div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-p btn-sm" onclick="qMsg(\''+p.id+'\');closeModal(\'pt-modal\')">💬 Message</button>'+(getKey()?'<button class="btn btn-o btn-sm" onclick="loadAI(\''+p.id+'\')">✦ AI Summary</button>':'')+'</div></div></div><div class="ph-vits"><div class="vit"><div class="vit-v" style="color:'+hc+'">'+p.hba1c+'%</div><div class="vit-l">HbA1c</div><div class="vit-t">Target &lt;'+(p.dm_type==='T1'?'7':'7.5')+'%</div></div><div class="vit"><div class="vit-v" style="color:'+bc+'">'+p.sbp+'/'+p.dbp+'</div><div class="vit-l">BP mmHg</div></div><div class="vit"><div class="vit-v" style="color:'+(p.ldl>3?'var(--rd)':p.ldl>2.6?'var(--am)':'var(--tx)')+'">'+p.ldl+'</div><div class="vit-l">LDL</div></div><div class="vit"><div class="vit-v" style="color:'+ec+'">'+p.egfr+'</div><div class="vit-l">eGFR</div></div><div class="vit"><div class="vit-v">'+p.bmi+'</div><div class="vit-l">BMI</div></div><div class="vit"><div class="vit-v" style="color:'+adhColor(p.adh)+'">'+adhLabel(p.adh)+'</div><div class="vit-l">Adherence</div></div><div class="vit"><div class="vit-v">'+p.fbs+'</div><div class="vit-l">FBS</div></div></div></div>'+ti+'<div class="g2" style="gap:12px;margin-bottom:12px"><div class="card cp"><div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:9px">Medications ('+p.meds.length+')</div>'+p.meds.map(function(m){return '<div style="display:flex;align-items:center;gap:7px;padding:5px 0;border-bottom:1px solid var(--bdr)"><div style="width:7px;height:7px;border-radius:50%;background:var(--nv);flex-shrink:0"></div><span style="font-size:11px;font-weight:500">'+m+'</span></div>';}).join('')+'</div><div class="card cp"><div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:9px">Screening</div>'+[{n:'Retinal',k:'ret'},{n:'Foot',k:'foot'},{n:'Kidney',k:'kid'},{n:'Cardiac',k:'card'},{n:'Neuro',k:'neuro'}].map(function(sc){var d=p.scr[sc.k]||{done:false};return '<div class="sc-row"><div class="sc-d '+(d.done?'s-ok':'s-ov')+'"></div><div style="flex:1;font-size:11px;font-weight:500">'+sc.n+'</div><div style="font-size:10px;color:var(--mu)">'+(d.done?(d.date||'Done'):'Overdue')+'</div></div>';}).join('')+'</div></div>'+(p.alerts.length?'<div class="card cp" style="border-color:var(--rd);margin-bottom:12px"><div style="font-size:10px;font-weight:700;color:var(--rd);text-transform:uppercase;margin-bottom:8px">Alerts ('+p.alerts.length+')</div>'+p.alerts.map(function(a){return '<div style="padding:7px 11px;border-left:3px solid var(--rd);background:var(--rdl);border-radius:0 6px 6px 0;margin-bottom:5px;font-size:11px;font-weight:500;color:#7f1d1d">'+a+'</div>';}).join('')+'</div>':'')+'<div id="pt-ai-box"></div><div id="pt-team"></div>';
+  var html='<div class="ph"><div class="ph-top"><div class="ph-av av'+p.dm_type+'">'+ini(p.name)+'</div><div style="flex:1"><div class="ph-name">'+p.name+'</div><div class="ph-meta"><span>'+p.age+'y · '+p.sex+'</span><span style="color:var(--bdr)">·</span><span>'+p.mrn+'</span><span style="color:var(--bdr)">·</span><span>'+p.centre+'</span><span style="color:var(--bdr)">·</span><span>'+p.doctor+'</span></div><div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-p btn-sm" onclick="qMsg(\''+p.id+'\');closeModal(\'pt-modal\')">💬 Message</button><button class="btn btn-g btn-sm" onclick="openAVS(\''+p.id+'\')">📄 Patient Summary</button>'+(getKey()?'<button class="btn btn-o btn-sm" onclick="loadAI(\''+p.id+'\')">✦ AI Summary</button>':'')+'</div></div></div><div class="ph-vits"><div class="vit"><div class="vit-v" style="color:'+hc+'">'+p.hba1c+'%</div><div class="vit-l">HbA1c</div><div class="vit-t">Target &lt;'+(p.dm_type==='T1'?'7':'7.5')+'%</div></div><div class="vit"><div class="vit-v" style="color:'+bc+'">'+p.sbp+'/'+p.dbp+'</div><div class="vit-l">BP mmHg</div></div><div class="vit"><div class="vit-v" style="color:'+(p.ldl>3?'var(--rd)':p.ldl>2.6?'var(--am)':'var(--tx)')+'">'+p.ldl+'</div><div class="vit-l">LDL</div></div><div class="vit"><div class="vit-v" style="color:'+ec+'">'+p.egfr+'</div><div class="vit-l">eGFR</div></div><div class="vit"><div class="vit-v">'+p.bmi+'</div><div class="vit-l">BMI</div></div><div class="vit"><div class="vit-v" style="color:'+adhColor(p.adh)+'">'+adhLabel(p.adh)+'</div><div class="vit-l">Adherence</div></div><div class="vit"><div class="vit-v">'+p.fbs+'</div><div class="vit-l">FBS</div></div></div></div>'+ti+'<div class="g2" style="gap:12px;margin-bottom:12px"><div class="card cp"><div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:9px">Medications ('+p.meds.length+')</div>'+p.meds.map(function(m){return '<div style="display:flex;align-items:center;gap:7px;padding:5px 0;border-bottom:1px solid var(--bdr)"><div style="width:7px;height:7px;border-radius:50%;background:var(--nv);flex-shrink:0"></div><span style="font-size:11px;font-weight:500">'+m+'</span></div>';}).join('')+'</div><div class="card cp"><div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:9px">Screening</div>'+[{n:'Retinal',k:'ret'},{n:'Foot',k:'foot'},{n:'Kidney',k:'kid'},{n:'Cardiac',k:'card'},{n:'Neuro',k:'neuro'}].map(function(sc){var d=p.scr[sc.k]||{done:false};return '<div class="sc-row"><div class="sc-d '+(d.done?'s-ok':'s-ov')+'"></div><div style="flex:1;font-size:11px;font-weight:500">'+sc.n+'</div><div style="font-size:10px;color:var(--mu)">'+(d.done?(d.date||'Done'):'Overdue')+'</div></div>';}).join('')+'</div></div>'+(p.alerts.length?'<div class="card cp" style="border-color:var(--rd);margin-bottom:12px"><div style="font-size:10px;font-weight:700;color:var(--rd);text-transform:uppercase;margin-bottom:8px">Alerts ('+p.alerts.length+')</div>'+p.alerts.map(function(a){return '<div style="padding:7px 11px;border-left:3px solid var(--rd);background:var(--rdl);border-radius:0 6px 6px 0;margin-bottom:5px;font-size:11px;font-weight:500;color:#7f1d1d">'+a+'</div>';}).join('')+'</div>':'')+'<div id="pt-ai-box"></div><div id="pt-team"></div>';
   $('pt-modal-body').innerHTML=html;
   openModal('pt-modal');
   if(typeof renderTeam==='function')renderTeam(id);
@@ -1230,6 +1239,104 @@ function parseAIJson(t){t=String(t).replace(/```json|```/g,'').trim();var a=t.in
 function enrolSex(){var el=$('e-sex');if(el&&el.value)return el.value;try{if(typeof _ed!=='undefined'&&_ed['e-sex'])return _ed['e-sex'];}catch(e){}return 'M';}
 function adhLabel(a){return a>=80?'Good':a>=60?'Fair':'Poor';}
 function adhColor(a){return a>=80?'var(--gr)':a>=60?'var(--am)':'var(--rd)';}
+
+/* ───────────── AFTER-VISIT PATIENT SUMMARY (Arabic, patient-facing) ───────────── */
+function avsLv(p){var tgt=p.dm_type==='T1'?7:7.5;
+  return {tgt:tgt,
+    h:p.hba1c>9?2:p.hba1c>tgt?1:0,
+    b:p.sbp>160?2:p.sbp>140?1:0,
+    e:p.egfr==null?0:(p.egfr<45?2:p.egfr<60?1:0),
+    l:p.ldl==null?0:(p.ldl>3?2:p.ldl>2.6?1:0)};}
+var AVS_COL=['var(--gr)','var(--am)','var(--rd)'],AVS_BG=['var(--grl)','var(--aml)','var(--rdl)'],AVS_WORD=['ممتاز ✓','يحتاج تحسين','يحتاج عناية'];
+function avsCard(label,val,target,lv){
+  return '<div style="background:'+AVS_BG[lv]+';border:1px solid '+AVS_COL[lv]+';border-radius:12px;padding:10px 12px">'
+   +'<div style="font-size:10.5px;color:var(--mu);font-weight:700">'+label+'</div>'
+   +'<div style="font-size:19px;font-weight:900;color:'+AVS_COL[lv]+';margin:2px 0">'+val+'</div>'
+   +'<div style="font-size:10px;color:var(--mu)">'+target+'</div>'
+   +'<div style="font-size:10.5px;font-weight:800;color:'+AVS_COL[lv]+';margin-top:3px">'+AVS_WORD[lv]+'</div></div>';}
+function avsSec(t){return '<div style="font-size:11.5px;font-weight:800;color:var(--nv);margin:16px 0 8px">'+t+'</div>';}
+function openAVS(id){
+  var p=PTS.find(function(x){return x.id===id;});if(!p)return;
+  var s=avsLv(p),first=p.name.split(' ')[0];
+  var greet=(p.sex==='F'?'عزيزتي ':'عزيزي ')+first+'،';
+  /* plain-language explanation (rule-based) */
+  var ex=[];
+  if(s.h===2)ex.push('مستوى السكر التراكمي في دمك مرتفع، وخفضه هو هدفنا الأول في الفترة القادمة.');
+  else if(s.h===1)ex.push('مستوى السكر التراكمي أعلى من الهدف قليلاً — أنت قريب من الهدف وبخطوات بسيطة نصل إليه.');
+  else ex.push('مستوى السكر التراكمي ضمن الهدف — أحسنت، استمر على نفس النهج.');
+  var t=p.hba1c_t||[];
+  if(t.length>1&&t[0]-t[t.length-1]>=0.3)ex.push('نتائجك في تحسّن مقارنة بالزيارات السابقة — استمر.');
+  else if(t.length>1&&t[t.length-1]-t[0]>=0.3)ex.push('لاحظنا ارتفاعاً تدريجياً في نتائجك الأخيرة، وسنعمل معك على عكس هذا الاتجاه.');
+  if(s.b>0)ex.push('ضغط الدم أعلى من الهدف، وضبطه يحمي قلبك وكليتيك.');
+  if(s.e>0)ex.push('وظائف الكلى تحتاج متابعة دورية — لهذا نطلب تحاليل الدم والبول بانتظام.');
+  if(s.l>0)ex.push('الكوليسترول الضار أعلى من الهدف — الانتظام في علاج الكوليسترول يحمي القلب والشرايين.');
+  /* action plan (rule-based) */
+  var plan=['انتظم في أدويتك يومياً دون انقطاع: '+p.meds.join('، ')+'.'];
+  if(p.adh<80)plan.push('لاحظنا تفويت بعض الجرعات — اضبط منبّهاً يومياً في جوالك لتذكيرك بالدواء.');
+  var scrAr={ret:'فحص قاع العين',foot:'فحص القدم',kid:'تحليل وظائف الكلى',card:'تقييم القلب',neuro:'فحص الأعصاب'};
+  var due=Object.keys(scrAr).filter(function(k){return !((p.scr||{})[k]&&p.scr[k].done);}).map(function(k){return scrAr[k];});
+  if(due.length)plan.push('فحوصات مطلوبة: '+due.join('، ')+' — سيتواصل معك منسق الرعاية لتحديد المواعيد.');
+  plan.push('امشِ 30 دقيقة معظم أيام الأسبوع، وقلّل السكريات والمشروبات المحلّاة.');
+  if(p.next)plan.push('موعدك القادم: '+p.next+' — احضر صائماً 8 ساعات لتحليل الدم.');
+  if(/insulin|glibenclamide|gliclazide/i.test(p.meds.join(' ')))plan.push('إذا شعرت بأعراض هبوط السكر (رجفة، تعرّق، دوخة) فتناول شيئاً سكرياً فوراً وأخبر فريقك.');
+  var rk={H:['متابعة مكثفة','حالتك تحتاج متابعة قريبة من فريقنا خلال الفترة القادمة — سنكون معك خطوة بخطوة.',2],
+          M:['متابعة منتظمة','حالتك مستقرة نسبياً وسنتابعك بشكل منتظم للوصول إلى أهدافك.',1],
+          L:['مستقر','حالتك مستقرة — ممتاز! سنراجعك دورياً للاطمئنان.',0]}[p.risk]||['متابعة','سنتابع حالتك بانتظام.',1];
+  var cards=avsCard('السكر التراكمي HbA1c',p.hba1c+'%','الهدف: أقل من '+s.tgt+'%',s.h)
+    +avsCard('ضغط الدم',p.sbp+'/'+p.dbp,'الهدف: أقل من 140/90',s.b)
+    +avsCard('وظائف الكلى eGFR',(p.egfr==null?'—':p.egfr),'الطبيعي: أعلى من 60',s.e)
+    +avsCard('الكوليسترول الضار LDL',(p.ldl==null?'—':p.ldl),'الهدف: أقل من 2.6',s.l);
+  var html='<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-bottom:12px">'
+   +'<div style="font-size:11px;color:var(--mu)">Preview of the link the patient receives after the visit</div>'
+   +'<div style="display:flex;gap:8px">'+(getKey()?'<button class="btn btn-o btn-sm" onclick="aiAVS(\''+p.id+'\')">✦ Personalise with AI</button>':'')
+   +'<button class="btn btn-p btn-sm" onclick="sendAVS(\''+p.id+'\')">📱 Send via SMS / WhatsApp</button></div></div>'
+   +'<div id="avs-sent"></div>'
+   +'<div dir="rtl" style="max-width:410px;margin:0 auto;background:#fff;border:1px solid var(--bdr);border-radius:18px;box-shadow:0 8px 30px rgba(26,43,74,.13);overflow:hidden">'
+   +'<div style="background:var(--nv);color:#fff;padding:14px 18px"><div style="font-size:15px;font-weight:800">جسور · ملخص زيارتك</div>'
+   +'<div style="font-size:10.5px;opacity:.85;margin-top:3px">مركز '+p.centre+' · '+p.doctor+' · '+new Date().toISOString().split('T')[0]+'</div></div>'
+   +'<div style="padding:16px 18px">'
+   +'<div style="font-size:13.5px;font-weight:800">'+greet+'</div>'
+   +'<div style="font-size:11.5px;color:var(--mu);line-height:1.8;margin-top:4px">شكراً لزيارتك اليوم. هذا ملخص بسيط لحالتك ونتائج تحاليلك وما نحتاجه منك حتى موعدك القادم.</div>'
+   +avsSec('📍 أين أنت الآن')
+   +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">'+cards+'</div>'
+   +avsSec('💬 نتائج تحاليلك بكلمات بسيطة')
+   +'<ul id="avs-explain" style="margin:0;padding-right:18px;font-size:12px;line-height:1.9">'+ex.map(function(x){return '<li>'+x+'</li>';}).join('')+'</ul>'
+   +avsSec('🤝 مستوى المتابعة')
+   +'<div style="display:flex;align-items:center;gap:10px;background:'+AVS_BG[rk[2]]+';border:1px solid '+AVS_COL[rk[2]]+';border-radius:12px;padding:10px 12px">'
+   +'<span style="font-size:11px;font-weight:900;color:#fff;background:'+AVS_COL[rk[2]]+';border-radius:8px;padding:4px 10px;white-space:nowrap">'+rk[0]+'</span>'
+   +'<span style="font-size:11.5px;line-height:1.7">'+rk[1]+'</span></div>'
+   +avsSec('✅ المطلوب منك حتى الموعد القادم')
+   +'<ol id="avs-plan" style="margin:0;padding-right:18px;font-size:12px;line-height:1.9">'+plan.map(function(x){return '<li>'+x+'</li>';}).join('')+'</ol>'
+   +'<div style="margin-top:16px;padding-top:10px;border-top:1px dashed var(--bdr);font-size:10px;color:var(--mu);line-height:1.8">لأي استفسار تواصل مع منسق الرعاية على الرقم المجاني 8001234567 · هذا الملخص للتوعية ولا يغني عن استشارة طبيبك المعالج.</div>'
+   +'</div></div>';
+  $('avs-body').innerHTML=html;
+  openModal('avs-modal');
+}
+function sendAVS(id){
+  var p=PTS.find(function(x){return x.id===id;});if(!p)return;
+  var link='jusoor.sa/s/'+(p.id.replace(/\D/g,'')||'1001');
+  var el=$('avs-sent');
+  if(el)el.innerHTML='<div dir="rtl" style="max-width:410px;margin:0 auto 12px;background:#e7f6e7;border:1px solid #bfe3bf;border-radius:12px;padding:10px 14px;font-size:12px;line-height:1.9">📱 <b>تم إرسال الرسالة التالية للمريض:</b><br>'
+   +(p.sex==='F'?'عزيزتي ':'عزيزي ')+p.name.split(' ')[0]+'، شكراً لزيارتك اليوم. ملخص حالتك وخطة علاجك هنا: <span style="color:var(--bl);text-decoration:underline">'+link+'</span> — فريق جسور</div>';
+  p.teamMsgs=p.teamMsgs||[];
+  p.teamMsgs.push({from:'System',role:'Care Coordinator',text:'After-visit summary link sent to patient via SMS/WhatsApp ('+link+')',date:new Date().toISOString().split('T')[0]});
+  toast('Summary link sent','SMS / WhatsApp → '+p.name);
+}
+async function aiAVS(id){
+  var p=PTS.find(function(x){return x.id===id;});if(!p||!getKey())return;
+  var exEl=$('avs-explain'),plEl=$('avs-plan');
+  if(exEl)exEl.innerHTML='<li>جارٍ إعداد ملخص مخصص لك…</li>';
+  try{
+    var r=await aiFetch({method:'POST',headers:{'Content-Type':'application/json','x-api-key':getKey(),'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      body:JSON.stringify({model:getAIModel(),max_tokens:1500,messages:[{role:'user',content:'Write a warm after-visit summary for a diabetes patient in SIMPLE Arabic (patient-friendly, encouraging, no medical jargon, no scary language). Patient: '+p.name+', '+p.age+'y '+p.sex+', '+p.dm_type+' DM. HbA1c '+p.hba1c+'%, BP '+p.sbp+'/'+p.dbp+', LDL '+p.ldl+', eGFR '+p.egfr+', adherence '+p.adh+'%. Meds: '+p.meds.join(', ')+'. Return ONLY JSON {"explain":["3-4 short Arabic sentences explaining the results simply"],"plan":["4-5 short Arabic action items the patient must do"]}'}]})});
+    var d=await r.json();if(d.error)throw new Error(d.error.message);
+    var data=parseAIJson(d.content[0].text);
+    if(exEl&&data.explain)exEl.innerHTML=data.explain.map(function(x){return '<li>'+x+'</li>';}).join('');
+    if(plEl&&data.plan)plEl.innerHTML=data.plan.map(function(x){return '<li>'+x+'</li>';}).join('');
+    toast('AI summary ready','Personalised in Arabic');
+  }catch(e){toast('AI error',''+e.message);}
+}
+
 async function aiFetch(opts){try{var r=await fetch('https://api.anthropic.com/v1/messages',opts);if(r.status==529||r.status==503){await new Promise(w=>setTimeout(w,1500));r=await fetch('https://api.anthropic.com/v1/messages',opts);}return r;}catch(e){await new Promise(w=>setTimeout(w,1500));return fetch('https://api.anthropic.com/v1/messages',opts);}}
 function saveModel(){var m=$('s-model')&&$('s-model').value;if(m){localStorage.setItem('jd_model',m);toast('AI model set',m);}}
 (function(){try{var sm=$('s-model');if(sm)sm.value=getAIModel();}catch(e){}})();
