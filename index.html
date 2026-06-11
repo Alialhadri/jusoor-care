@@ -640,11 +640,11 @@ body{background:var(--bg);display:flex;height:100vh;overflow:hidden;}
         <div style="font-size:10px;color:var(--mu);margin-top:10px">ⓘ Illustrative model on synthetic demo data. Cost-avoidance uses a transparent per-patient assumption; targets reflect preventive/value-based-care priorities, not official MoH thresholds.</div>
       </div>
       <div class="g5" style="margin-bottom:16px">
-        <div class="card cp"><div class="kv" id="an-ctrl" style="color:var(--gr)">0</div><div class="kl">HbA1c at Goal</div><div class="ks">Below type target</div></div>
-        <div class="card cp"><div class="kv" id="an-sglt2" style="color:var(--te)">0</div><div class="kl">On SGLT2i</div><div class="ks">CV/kidney benefit</div></div>
-        <div class="card cp"><div class="kv" id="an-glp1" style="color:var(--pu)">0</div><div class="kl">On GLP-1 RA</div><div class="ks">Weight + CV benefit</div></div>
-        <div class="card cp"><div class="kv" id="an-ret" style="color:var(--am)">0</div><div class="kl">Retinal Overdue</div><div class="ks">Annual exam</div></div>
-        <div class="card cp"><div class="kv" id="an-adh" style="color:var(--mu)">0%</div><div class="kl">Avg Adherence</div></div>
+        <div class="card cp" style="cursor:pointer" onclick="anDrill('ctrl')"><div class="kv" id="an-ctrl" style="color:var(--gr)">0</div><div class="kl">HbA1c at Goal</div><div class="ks">Below type target</div><div class="kpi-hint">↗ View patients</div></div>
+        <div class="card cp" style="cursor:pointer" onclick="anDrill('sglt2')"><div class="kv" id="an-sglt2" style="color:var(--te)">0</div><div class="kl">On SGLT2i</div><div class="ks">CV/kidney benefit</div><div class="kpi-hint">↗ View patients</div></div>
+        <div class="card cp" style="cursor:pointer" onclick="anDrill('glp1')"><div class="kv" id="an-glp1" style="color:var(--pu)">0</div><div class="kl">On GLP-1 RA</div><div class="ks">Weight + CV benefit</div><div class="kpi-hint">↗ View patients</div></div>
+        <div class="card cp" style="cursor:pointer" onclick="anDrill('ret')"><div class="kv" id="an-ret" style="color:var(--am)">0</div><div class="kl">Retinal Overdue</div><div class="ks">Annual exam</div><div class="kpi-hint">↗ View patients</div></div>
+        <div class="card cp" style="cursor:pointer" onclick="anDrill('adh')"><div class="kv" id="an-adh" style="color:var(--mu)">0%</div><div class="kl">Avg Adherence</div><div class="kpi-hint">↗ Lowest first</div></div>
       </div>
       <div class="g2" style="margin-bottom:14px">
         <div class="card cp"><div class="ch"><div class="ct">HbA1c Trend by DM Type</div></div><div style="height:200px;position:relative"><canvas id="an-trend"></canvas></div></div>
@@ -973,8 +973,9 @@ function doOv(){
   $('k-gdm').textContent=PTS.filter(function(p){return p.dm_type==='GDM';}).length;
   
   $('nb-r').textContent=h; $('nb-wl').textContent=h+m; $('nb-pt').textContent=PTS.length;
+  setTimeout(function(){try{wireOvCharts();}catch(e){}},50);
   mk('c-hba1c');
-  var qs=['Q2 2024','Q3 2024','Q4 2024','Q1 2025'];
+  var qs=lastQuarters(4);
   var avg=qs.map(function(_,i){return +(PTS.reduce(function(s,p){return s+(p.hba1c_t[i]||p.hba1c);},0)/PTS.length).toFixed(1);});
   CHARTS['c-hba1c']=new Chart($('c-hba1c'),{type:'line',data:{labels:qs,datasets:[{label:'Avg HbA1c',data:avg,borderColor:'#378add',backgroundColor:'rgba(55,138,221,.08)',fill:true,tension:.4,pointRadius:5,borderWidth:2},{label:'Target 7%',data:[7,7,7,7],borderColor:'#5aaa1e',borderDash:[5,5],borderWidth:1.5,pointRadius:0}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:10},boxWidth:10}}},scales:{y:{beginAtZero:false}}}});
   mk('c-risk');
@@ -1174,7 +1175,7 @@ function saveGoal(){var id=$('goal-pt')&&$('goal-pt').value;if(!id){toast('Selec
 function dsDsme(){var el=$('dsme-table');if(!el)return;var mods=['Disease basics','Medication','Nutrition','Activity','Glucose monitoring','Foot care','Hypo management'];el.innerHTML='<div style="overflow-x:auto"><table class="tbl"><thead><tr><th>Patient</th><th>Type</th>'+mods.map(function(m){return '<th style="font-size:8px">'+m.substring(0,8)+'</th>';}).join('')+'<th>Progress</th></tr></thead><tbody>'+PTS.map(function(p){var done=Math.min(p.sessions.length*2,mods.length);return '<tr onclick="openPt(\''+p.id+'\')">'+'<td style="font-weight:700">'+p.name+'</td><td><span class="type-badge '+p.dm_type+'">'+p.dm_type+'</span></td>'+mods.map(function(_,i){return '<td style="text-align:center">'+(i<done?'<span style="color:var(--gr);font-weight:700">✓</span>':'<span style="color:var(--bdr)">○</span>')+'</td>';}).join('')+'<td><div style="height:5px;background:var(--bdr);border-radius:3px;width:80px;display:inline-block"><div style="height:100%;width:'+Math.round(done/mods.length*100)+'%;background:'+(done>=5?'var(--gr)':done>=3?'var(--am)':'var(--rd)')+';border-radius:3px"></div></div> <span style="font-size:10px">'+Math.round(done/mods.length*100)+'%</span></td></tr>';}).join('')+'</tbody></table></div>';}
 
 /* ─── ANALYTICS ────────────────────────────────────── */
-function doAn(){
+function doAn(){setTimeout(function(){try{wireAnCharts();}catch(e){}},80);
   var AP=window.ANTYPE?PTS.filter(function(p){return p.dm_type===window.ANTYPE;}):PTS;var n=AP.length||1;
   if($('an-ctrl'))$('an-ctrl').textContent=AP.filter(function(p){return p.hba1c<(p.dm_type==='T1'?7:7.5);}).length;
   if($('an-sglt2'))$('an-sglt2').textContent=AP.filter(function(p){return p.meds.some(function(m){return /pagliflozin/i.test(m);});}).length;
@@ -1183,7 +1184,7 @@ function doAn(){
   if($('an-adh'))$('an-adh').textContent=Math.round(AP.reduce(function(s,p){return s+p.adh;},0)/n)+'%';
   if(typeof Chart==='undefined')return;
   mk('an-trend');mk('an-bmi');mk('an-meds');
-  var qs=['Q2','Q3','Q4','Q1'];
+  var qs=lastQuarters(4);
   function avg(ty){return qs.map(function(_,i){var ps=AP.filter(function(p){return p.dm_type===ty;});return ps.length?+(ps.reduce(function(s,p){return s+(p.hba1c_t[i]||p.hba1c);},0)/ps.length).toFixed(1):null;});}
   CHARTS['an-trend']=new Chart($('an-trend'),{type:'line',data:{labels:qs,datasets:[{label:'T2DM',data:avg('T2'),borderColor:'#378add',tension:.4,borderWidth:2,pointRadius:4},{label:'T1DM',data:avg('T1'),borderColor:'#7c4dff',tension:.4,borderWidth:2,pointRadius:4},{label:'GDM',data:avg('GDM'),borderColor:'#ef9f27',tension:.4,borderWidth:2,pointRadius:4}]},options:{responsive:true,maintainAspectRatio:false,spanGaps:true,plugins:{legend:{position:'bottom',labels:{font:{size:10},boxWidth:10}}},scales:{y:{beginAtZero:false}}}});
   var bb=[0,0,0,0];AP.forEach(function(p){if(p.bmi<25)bb[0]++;else if(p.bmi<30)bb[1]++;else if(p.bmi<35)bb[2]++;else bb[3]++;});
@@ -1270,6 +1271,51 @@ function setAnType(t){window.ANTYPE=t;document.querySelectorAll('.an-tab').forEa
 /* ───────── v2.1: AI drafting, goals list, value-based scorecard ───────── */
 async function aiDraftNote(){var id=$('edu-pt')&&$('edu-pt').value;if(!id){toast('Select a patient first','');return;}if(!aiOK()){toast('Connect AI in Settings','Secure proxy or API key');return;}var p=PTS.find(function(x){return x.id===id;});if(!p)return;var prev=$('edu-notes')?$('edu-notes').value:'';if($('edu-notes'))$('edu-notes').value='✦ Drafting personalised note…';try{var topics=suggestTopics(p).join(', ');var prompt='You are a diabetes nurse educator. Draft concise DSME session notes (5-7 short lines) in English. Cover topics covered, patient understanding, barriers, next-step plan. Patient (de-identified): '+p.dm_type+' DM, HbA1c '+p.hba1c+'%, BMI '+(p.bmi||'?')+', adherence '+(p.adh||'?')+'%, meds: '+(p.meds||[]).join('; ')+'. Priority needs: '+topics+'. Return plain text only, no preamble.';var r=await aiFetch({method:'POST',headers:{'Content-Type':'application/json','x-api-key':getKey(),'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:getAIModel(),max_tokens:1500,messages:[{role:'user',content:prompt}]})});var d=await r.json();if(d.error)throw new Error(d.error.message);var txt=(d.content&&d.content[0]&&d.content[0].text||'').trim();if($('edu-notes'))$('edu-notes').value=txt||prev;toast('AI note drafted','Review & edit before saving');}catch(e){if($('edu-notes'))$('edu-notes').value=prev;toast('AI error',''+e.message);}}
 async function aiDraftGoal(){var id=$('goal-pt')&&$('goal-pt').value;if(!id){toast('Select a patient first','');return;}if(!aiOK()){toast('Connect AI in Settings','');return;}var p=PTS.find(function(x){return x.id===id;});if(!p)return;var cat=($('goal-cat')&&$('goal-cat').value)||'diabetes self-management';var prev=$('goal-txt')?$('goal-txt').value:'';if($('goal-txt'))$('goal-txt').value='✦ Drafting…';try{var prompt='Write ONE SMART goal (specific, measurable, achievable, relevant, time-bound) as a single sentence, category "'+cat+'", for a de-identified patient: '+p.dm_type+' DM, HbA1c '+p.hba1c+'%, BMI '+(p.bmi||'?')+', adherence '+(p.adh||'?')+'%. Return only the goal sentence, no preamble or quotes.';var r=await aiFetch({method:'POST',headers:{'Content-Type':'application/json','x-api-key':getKey(),'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:getAIModel(),max_tokens:1000,messages:[{role:'user',content:prompt}]})});var d=await r.json();if(d.error)throw new Error(d.error.message);var txt=(d.content&&d.content[0]&&d.content[0].text||'').trim().replace(/^["']|["']$/g,'');if($('goal-txt'))$('goal-txt').value=txt||prev;if($('goal-date')&&!$('goal-date').value){$('goal-date').value=new Date(Date.now()+90*86400000).toISOString().split('T')[0];}toast('AI goal drafted','Review & click Set Goal');}catch(e){if($('goal-txt'))$('goal-txt').value=prev;toast('AI error',''+e.message);}}
+function lastQuarters(n){var out=[],d=new Date(),q=Math.floor(d.getMonth()/3)+1,y=d.getFullYear();for(var i=n-1;i>=0;i--){var qq=q-i,yy=y;while(qq<1){qq+=4;yy--;}out.push('Q'+qq+' '+yy);}return out;}
+function listDrill(title,arr,subFn,actFn){
+  $('edu-modal-title').textContent=title+' ('+arr.length+')';
+  var h=arr.length?arr.map(function(p){
+    return '<div style="display:flex;align-items:center;gap:10px;padding:8px 4px;border-bottom:1px solid var(--bdr)">'
+     +'<div style="flex:1;min-width:0"><span style="font-size:12.5px;font-weight:700;cursor:pointer" onclick="closeModal(\'edu-modal\');openPt(\''+p.id+'\')">'+p.name+'</span> <span class="type-badge '+p.dm_type+'">'+p.dm_type+'</span>'
+     +'<div style="font-size:10px;color:var(--mu);margin-top:2px">'+(subFn?subFn(p):'')+'</div></div>'+(actFn?actFn(p):'')+'</div>';}).join('')
+   :'<div style="font-size:12px;color:var(--mu);padding:14px;text-align:center">No patients in this group.</div>';
+  $('edu-modal-body').innerHTML='<div style="max-height:60vh;overflow:auto">'+h+'</div>';
+  openModal('edu-modal');
+}
+function subStd(p){return 'HbA1c '+p.hba1c+'% · BP '+p.sbp+'/'+p.dbp+' · '+({H:'High',M:'Moderate',L:'Low'}[p.risk]||'')+' risk · '+p.centre;}
+function actOpen(p){return '<button class="btn btn-o btn-xs" onclick="closeModal(\'edu-modal\');openPt(\''+p.id+'\')">Open</button>';}
+function wireChart(id,fn){var c=$(id);if(!c||!CHARTS[id])return;c.style.cursor='pointer';
+  c.onclick=function(evt){try{var ch=CHARTS[id];var els=ch.getElementsAtEventForMode(evt,'nearest',{intersect:true},true);if(els.length)fn(els[0].index,els[0].datasetIndex);}catch(e){}};}
+var MEDCOV=[['SGLT2i',/pagliflozin/i],['GLP-1',/semaglutide|liraglutide|dulaglutide|tirzepatide/i],['Metformin',/metformin/i],['Insulin',/insulin/i],['Statin',/vastatin|statin/i],['ACEi/ARB',/ramipril|lisinopril|valsartan|losartan|irbesartan/i]];
+var ANMEDS=[['Metformin',/metformin/i],['SGLT2i',/pagliflozin/i],['GLP-1',/semaglutide|liraglutide|dulaglutide/i],['DPP-4i',/sitaglip|saxaglip/i],['SU',/glicla|glibenc/i],['Insulin',/insulin/i],['RAAS',/ramipril|lisinopril|valsartan|losartan|finerenone/i],['Statin',/statin|vastatin/i]];
+function wireOvCharts(){
+  var HB=[[0,7,'<7%'],[7,7.5,'7–7.5%'],[7.5,8,'7.5–8%'],[8,8.5,'8–8.5%'],[8.5,9,'8.5–9%'],[9,99,'≥9%']];
+  wireChart('reg-hist',function(i){var r=HB[i];listDrill('HbA1c '+r[2],PTS.filter(function(p){return p.hba1c>=r[0]&&p.hba1c<r[1];}),subStd,actOpen);});
+  wireChart('c-medcov',function(i){var m=MEDCOV[i];listDrill('On '+m[0],PTS.filter(function(p){return p.meds.some(function(x){return m[1].test(x);});}),function(p){return p.meds.join(' · ');},actOpen);});
+  var SCR=[['ret','Retinal'],['foot','Foot'],['kid','Kidney'],['card','Cardiac']];
+  wireChart('c-screen',function(i){var k=SCR[i];listDrill(k[1]+' screening — overdue',PTS.filter(function(p){return !(p.scr[k[0]]&&p.scr[k[0]].done);}),subStd,
+    function(p){return '<button class="btn btn-o btn-xs" onclick="addTask(\''+p.id+'\',\'Investigations\',\''+k[1]+' screening\')">+ Task</button>'+actOpen(p);});});
+}
+function wireAnCharts(){
+  var BMI=[[0,25,'Healthy <25'],[25,30,'Overweight 25–30'],[30,35,'Obese 30–35'],[35,99,'Severe >35']];
+  wireChart('an-bmi',function(i){var r=BMI[i];listDrill('BMI '+r[2],PTS.filter(function(p){return p.bmi>=r[0]&&p.bmi<r[1];}),function(p){return 'BMI '+p.bmi+' · '+subStd(p);},actOpen);});
+  wireChart('an-meds',function(i){var m=ANMEDS[i];listDrill('On '+m[0],PTS.filter(function(p){return p.meds.some(function(x){return m[1].test(x);});}),function(p){return p.meds.join(' · ');},actOpen);});
+}
+function anDrill(kind){
+  if(kind==='ctrl')listDrill('HbA1c at goal',PTS.filter(function(p){return p.hba1c<(p.dm_type==='T1'?7:7.5);}),subStd,actOpen);
+  else if(kind==='sglt2')listDrill('On SGLT2i',PTS.filter(function(p){return p.meds.some(function(m){return /pagliflozin/i.test(m);});}),function(p){return p.meds.join(' · ');},actOpen);
+  else if(kind==='glp1')listDrill('On GLP-1 RA',PTS.filter(function(p){return p.meds.some(function(m){return /semaglutide|liraglutide|dulaglutide/i.test(m);});}),function(p){return p.meds.join(' · ');},actOpen);
+  else if(kind==='ret')listDrill('Retinal exam overdue',PTS.filter(function(p){return !p.scr.ret.done;}),subStd,
+    function(p){return '<button class="btn btn-o btn-xs" onclick="addTask(\''+p.id+'\',\'Investigations\',\'Retinal screening\')">+ Task</button>'+actOpen(p);});
+  else if(kind==='adh')listDrill('Adherence — lowest first',PTS.slice().sort(function(a,b){return a.adh-b.adh;}),function(p){return 'Adherence '+p.adh+'% · '+subStd(p);},actOpen);
+}
+function freshenDates(){var T=Date.now();function past(d){return new Date(T-d*86400000).toISOString().split('T')[0];}
+  PTS.forEach(function(p,idx){
+    if(p.next&&p.next<'2026-01')p.next=new Date(T+(((idx%5)+1)*7)*86400000).toISOString().split('T')[0];
+    if(p.last&&p.last<'2026-01')p.last=past((idx%8)*7+3);
+    ['ret','foot','kid','card','neuro'].forEach(function(k){var sc=p.scr&&p.scr[k];if(sc&&sc.date&&sc.date<'2026-01')sc.date=past((idx%10)*20+30);});
+    (p.teamMsgs||[]).forEach(function(m,j){if(m.date&&m.date<'2026-01')m.date=past(j*2+1);});
+  });}
 function eduSelect(pid){closeModal('edu-modal');nav('edu',document.querySelector('[data-view=edu]'));if($('edu-pt')){$('edu-pt').value=pid;eduSelChanged();}var e=$('edu-notes');if(e)e.focus();toast('Patient selected','Ready to log the session');}
 function eduDrill(kind){
   var T={case:'Active Caseload — all enrolled patients',sess:'Sessions Done — education log',goals:'Goals — all patient goals',pend:'Education Pending — no session yet'}[kind];
@@ -1534,7 +1580,7 @@ function postTeamMsg(id){var p=PTS.find(function(x){return x.id===id;});if(!p)re
 function doInbox(){var inbox=[];PTS.forEach(function(p){(p.teamMsgs||[]).forEach(function(m){if(m.role!=='Physician')inbox.push({p:p,m:m});});});inbox.sort(function(a,b){return (b.m.date||'').localeCompare(a.m.date||'');});var el=$('ph-inbox');if(!el)return;el.innerHTML=inbox.length?inbox.map(function(x){var p=x.p,m=x.m;return '<div class="card cp" style="margin-bottom:8px;background:var(--bg);box-shadow:none"><div style="display:flex;justify-content:space-between"><b style="font-size:12px">'+p.name+' · '+p.dm_type+'</b><span style="font-size:10px;color:var(--mu)">'+m.date+'</span></div><div style="font-size:11px;margin-top:4px"><b style="color:var(--te)">'+esc(m.from)+' ('+m.role+'):</b> '+esc(m.text)+'</div><button class="btn btn-o btn-xs" style="margin-top:6px" onclick="openPt(\''+p.id+'\')">Open patient</button></div>';}).join(''):'<div style="font-size:12px;color:var(--mu);text-align:center;padding:14px">No messages yet. Coordinators message you from any patient via the “Care-team communication” box.</div>';}
 function raqeemImport(){if(typeof saveVals==='function')saveVals();var s=[{n:'Faisal Al-Harbi',a:'58',sex:'M',bmi:'31',hba1c:'8.9',sbp:'148',dbp:'90',egfr:'66',ldl:'3.4',acr:'42'},{n:'Latifah Al-Otaibi',a:'63',sex:'F',bmi:'34',hba1c:'9.6',sbp:'156',dbp:'94',egfr:'52',ldl:'3.9',acr:'120'}][Math.floor(Math.random()*2)];_ed['e-name']=s.n;_ed['e-mrn']='SA-'+Math.floor(1000+Math.random()*8999);_ed['e-age']=s.a;_ed['e-sex']=s.sex;_ed['e-bmi']=s.bmi;_ed['e-centre']='Al-Olaya';_ed['e-hba1c']=s.hba1c;_ed['e-sbp']=s.sbp;_ed['e-dbp']=s.dbp;_ed['e-egfr']=s.egfr;_ed['e-ldl']=s.ldl;_ed['e-acr']=s.acr;_ed['e-summary']='Imported from Raqeem — annual diabetes review';if(typeof renderPane==='function')renderPane();toast('Retrieved from Raqeem (NPHIES)','Demographics & labs pre-filled — review & continue');}
 (function(){if(typeof PTS!=='undefined'){PTS.forEach(function(p){if(!p.teamMsgs)p.teamMsgs=[];});var a=PTS.find(function(p){return p.id==='JD-001';});if(a&&!a.teamMsgs.length)a.teamMsgs.push({from:'Sarah Al-Ghamdi',role:'Care Coordinator',text:'Patient called — reports dizziness and missed metformin doses this week. Please review and advise on dose.',date:'2024-03-12'});var COSEED=['Patient missed last appointment — phoned, will attend this week. Needs HbA1c repeat before visit.','Family reports poor adherence to insulin schedule; educator session requested.','Pharmacy flagged prescription not collected for 2 weeks — please advise on plan.','Patient travelling next month; asked to bring the review forward.'];PTS.filter(function(p){return p.risk==='H';}).slice(1,5).forEach(function(p,i){if(!p.teamMsgs.length){var d=new Date();d.setDate(d.getDate()-(i+1));p.teamMsgs.push({from:'Sarah Al-Ghamdi',role:'Care Coordinator',text:COSEED[i%COSEED.length],date:d.toISOString().split('T')[0]});}});}
-  loadPts();lgNames();var u=currentUser();if(u){applyUser(u);}else{applyUser({role:'Care Coordinator',name:'Sarah Al-Ghamdi'});}})();
+  loadPts();try{freshenDates();}catch(e){}lgNames();var u=currentUser();if(u){applyUser(u);}else{applyUser({role:'Care Coordinator',name:'Sarah Al-Ghamdi'});}})();
 
 /* jusoor-care round 2: worklist actions + coordinator panel */
 window.WLFILTER='all';
