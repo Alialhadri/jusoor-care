@@ -282,6 +282,7 @@ body{background:var(--bg);display:flex;height:100vh;overflow:hidden;}
     <div class="si" data-view="pt" onclick="nav('pt',this)"><span class="si-ic">☰</span>Patient Registry<span class="si-badge badge-b" id="nb-pt">0</span></div>
     <div class="si" data-view="hu" onclick="nav('hu',this)"><span class="si-ic">☀</span>Morning Huddle</div>
     <div class="si" data-view="tasks" onclick="nav('tasks',this)"><span class="si-ic">✓</span>Care Tasks<span class="si-badge badge-r" id="nb-tasks">0</span></div>
+    <div class="si" data-view="vc" onclick="nav('vc',this)"><span class="si-ic">🎥</span>Virtual Clinic<span class="si-badge badge-b" id="nb-vc">0</span></div>
     <div class="sb-sec">Coordination</div>
     <div class="si" data-view="enroll" onclick="nav('enroll',this);initEnroll()"><span class="si-ic">＋</span>Enrol Patient</div>
     <div class="si" data-view="msgs" onclick="nav('msgs',this)"><span class="si-ic">💬</span>Patient Messages</div>
@@ -653,6 +654,7 @@ body{background:var(--bg);display:flex;height:100vh;overflow:hidden;}
     </div>
 
     <!-- ═══ NAPHIES · RAQEEM INTEGRATION ════════════════ -->
+    <div class="view" id="v-vc"><div id="vc-body"></div></div>
     <div class="view" id="v-intg">
       <!-- Phase framing banner -->
       <div style="background:linear-gradient(135deg,var(--nv),var(--nv2));border-radius:12px;padding:16px 20px;color:#fff;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between">
@@ -806,6 +808,14 @@ body{background:var(--bg);display:flex;height:100vh;overflow:hidden;}
 </div>
 
 
+<!-- Virtual Clinic Tele-visit Modal -->
+<div class="overlay" id="vc-modal">
+  <div class="modal" style="max-width:880px">
+    <div class="mhd"><div class="mhd-t" id="vc-title">Virtual Clinic — Tele-visit</div><button class="mcx" onclick="vcClose()">✕</button></div>
+    <div class="mbody" id="vc-room"></div>
+  </div>
+</div>
+
 <!-- After-Visit Patient Summary Modal -->
 <div class="overlay" id="avs-modal">
   <div class="modal" style="max-width:600px">
@@ -891,7 +901,7 @@ function closeModal(id){$(id).classList.remove('open');}
 function ini(name){return name.split(' ').map(function(n){return n[0];}).slice(0,2).join('');}
 function fillSels(){var o='<option value="">Select patient…</option>'+PTS.map(function(p){return '<option value="'+p.id+'">'+p.name+' ('+p.dm_type+', HbA1c '+p.hba1c+'%)</option>';}).join('');['msg-pt','edu-pt','goal-pt'].forEach(function(id){var e=$(id);if(e)e.innerHTML=o;});}
 
-var TITLES={ov:'Population Overview',wl:'Morning Worklist',pt:'Patient Registry',hu:'Morning Huddle',tasks:'Care Tasks — To-Do',dm:'Diabetes Module',re:'DM Registry',enroll:'Enrol Patient',msgs:'Patient Messages',phys:'Physician — Clinical Summary',coord:'Coordinator — Patient Liaison',edu:'Education Tracker',an:'Analytics',intg:'NAPHIES · Raqeem Integration',set:'Settings'};
+var TITLES={ov:'Population Overview',wl:'Morning Worklist',pt:'Patient Registry',hu:'Morning Huddle',tasks:'Care Tasks — To-Do',dm:'Diabetes Module',re:'DM Registry',enroll:'Enrol Patient',msgs:'Patient Messages',phys:'Physician — Clinical Summary',coord:'Coordinator — Patient Liaison',edu:'Education Tracker',an:'Analytics',intg:'NAPHIES · Raqeem Integration',vc:'Virtual Clinic — Tele-visits',set:'Settings'};
 
 function nav(id,el){
   document.querySelectorAll('.view').forEach(function(v){v.classList.remove('on');});
@@ -910,6 +920,7 @@ function nav(id,el){
   if(id==='coord')doCoord();
   if(id==='edu'){fillSels();doEdu();eduSelChanged();}
   if(id==='an')doAn();
+  if(id==='vc')doVC();
   if(id==='intg')doIntg();
 }
 
@@ -1239,6 +1250,105 @@ function parseAIJson(t){t=String(t).replace(/```json|```/g,'').trim();var a=t.in
 function enrolSex(){var el=$('e-sex');if(el&&el.value)return el.value;try{if(typeof _ed!=='undefined'&&_ed['e-sex'])return _ed['e-sex'];}catch(e){}return 'M';}
 function adhLabel(a){return a>=80?'Good':a>=60?'Fair':'Poor';}
 function adhColor(a){return a>=80?'var(--gr)':a>=60?'var(--am)':'var(--rd)';}
+
+
+/* ───────────── VIRTUAL CLINIC — tele-visit eligibility, invites, simulated room ───────────── */
+var VCB=(function(){try{return JSON.parse(localStorage.getItem('jd_vc')||'{}');}catch(e){return{};}})();
+function vcSave(){try{localStorage.setItem('jd_vc',JSON.stringify(VCB));}catch(e){}}
+function vcElig(p){return p.risk!=='H'&&p.hba1c<9&&p.dm_type!=='GDM'&&(p.egfr==null||p.egfr>=45)&&(p.acr==null||p.acr<300);}
+function vcWhy(p){var r=[];if(p.risk==='H')r.push('high risk');if(p.hba1c>=9)r.push('HbA1c ≥9%');if(p.dm_type==='GDM')r.push('GDM — in-person');if(p.egfr!=null&&p.egfr<45)r.push('eGFR <45');if(p.acr!=null&&p.acr>=300)r.push('macroalbuminuria');return r.join(', ');}
+function updVCBadge(){var n=PTS.filter(function(p){return vcElig(p)&&!(VCB[p.id]&&VCB[p.id].status==='done');}).length;var b=$('nb-vc');if(b)b.textContent=n;}
+function vcKpi(col,val,label,sub){return '<div class="kpi" style="--kc:'+col+';cursor:default"><div style="position:absolute;top:0;left:0;right:0;height:3px;background:'+col+';border-radius:10px 10px 0 0"></div><div class="kv" style="color:'+col+'">'+val+'</div><div class="kl">'+label+'</div><div class="ks">'+sub+'</div></div>';}
+function doVC(){
+  var el=$('vc-body');if(!el)return;
+  var elig=PTS.filter(vcElig);
+  var pending=elig.filter(function(p){return !(VCB[p.id]&&VCB[p.id].status==='done');});
+  var invited=pending.filter(function(p){return VCB[p.id]&&VCB[p.id].status==='invited';});
+  var done=PTS.filter(function(p){return VCB[p.id]&&VCB[p.id].status==='done';});
+  var share=Math.round(done.length/Math.max(1,elig.length)*100);
+  var rows=pending.map(function(p){
+    var st=VCB[p.id]&&VCB[p.id].status;
+    return '<div style="display:flex;align-items:center;gap:10px;padding:9px 4px;border-bottom:1px solid var(--bdr)">'
+     +'<div style="flex:1;min-width:0"><span style="font-size:12.5px;font-weight:700;cursor:pointer" onclick="openPt(\''+p.id+'\')">'+p.name+'</span>'
+     +' <span class="type-badge '+p.dm_type+'">'+p.dm_type+'</span>'
+     +'<div style="font-size:10.5px;color:var(--mu);margin-top:2px">HbA1c '+p.hba1c+'% · BP '+p.sbp+'/'+p.dbp+' · eGFR '+(p.egfr==null?'—':p.egfr)+' · '+p.centre+'</div></div>'
+     +(st==='invited'?'<span class="chip ch-b" style="font-size:10px">📨 Invited '+(VCB[p.id].date||'')+'</span>':'<button class="btn btn-o btn-sm" onclick="vcInvite(\''+p.id+'\')">📨 Send invite</button>')
+     +'<button class="btn btn-p btn-sm" onclick="vcStart(\''+p.id+'\')">🎥 Start visit</button></div>';
+  }).join('')||'<div style="font-size:11.5px;color:var(--mu);padding:10px 0">No eligible patients right now.</div>';
+  var log=done.map(function(p){
+    return '<div style="display:flex;align-items:center;gap:10px;padding:8px 4px;border-bottom:1px solid var(--bdr)">'
+     +'<div class="sc-d s-ok"></div><div style="flex:1;font-size:12px;font-weight:600;cursor:pointer" onclick="openPt(\''+p.id+'\')">'+p.name+'</div>'
+     +'<span style="font-size:10.5px;color:var(--mu)">'+(VCB[p.id].date||'')+'</span>'
+     +'<button class="btn btn-o btn-sm" onclick="openAVS(\''+p.id+'\')">📄 Summary</button></div>';
+  }).join('')||'<div style="font-size:11.5px;color:var(--mu);padding:10px 0">No tele-visits completed yet.</div>';
+  var notElig=PTS.filter(function(p){return !vcElig(p);}).slice(0,4).map(function(p){
+    return '<div style="display:flex;gap:8px;align-items:center;padding:6px 4px;border-bottom:1px solid var(--bdr)"><div style="flex:1;font-size:11.5px">'+p.name+'</div><span style="font-size:10px;color:var(--rd)">'+vcWhy(p)+'</span></div>';}).join('');
+  el.innerHTML='<div class="krow" style="margin-bottom:14px">'
+   +vcKpi('var(--bl)',pending.length,'Eligible Today','Auto-computed from registry')
+   +vcKpi('var(--am)',invited.length,'Invites Sent','SMS / WhatsApp link')
+   +vcKpi('var(--gr)',done.length,'Tele-visits Done','Closed with summary')
+   +vcKpi('var(--nv)',done.length,'Clinic Slots Freed','Given to complex patients')
+   +vcKpi('var(--te,#0e7490)',share+'%','Virtual Share','HSTP target ≥30%')
+   +'</div>'
+   +'<div class="card cp" style="margin-bottom:14px;background:var(--bll,#eef5fd)"><div style="font-size:11.5px;line-height:1.7"><b>🎥 Virtual Clinic</b> — stable follow-ups are seen by video, freeing in-person slots for complex patients. Aligned with the <b>Seha Virtual Hospital</b> model and the Health Sector Transformation Program.<br><span style="color:var(--mu);font-size:10.5px">Eligibility (auto): not high-risk · HbA1c &lt;9% · eGFR ≥45 · no macroalbuminuria · not GDM. The physician can always override to in-person.</span></div></div>'
+   +'<div class="g2" style="gap:14px;align-items:start">'
+   +'<div class="card cp"><div class="ct" style="margin-bottom:6px">Eligible for tele-visit ('+pending.length+')</div><div style="max-height:420px;overflow:auto">'+rows+'</div></div>'
+   +'<div><div class="card cp" style="margin-bottom:14px"><div class="ct" style="margin-bottom:6px">Completed tele-visits</div><div style="max-height:220px;overflow:auto">'+log+'</div></div>'
+   +'<div class="card cp"><div class="ct" style="margin-bottom:6px">Needs in-person (examples)</div>'+notElig+'</div></div>'
+   +'</div>';
+  updVCBadge();
+}
+function vcInvite(id){
+  var p=PTS.find(function(x){return x.id===id;});if(!p)return;
+  var d=new Date().toISOString().split('T')[0];
+  VCB[id]={status:'invited',date:d};vcSave();
+  p.teamMsgs=p.teamMsgs||[];
+  p.teamMsgs.push({from:'System',role:'Care Coordinator',text:'Tele-visit invitation sent via SMS/WhatsApp (link jusoor.sa/v/'+(id.replace(/\D/g,'')||'1')+')',date:d});
+  toast('Tele-visit invite sent','SMS / WhatsApp → '+p.name);
+  doVC();
+}
+var VC_T=null,VC_S=0;
+function vcStart(id){
+  var p=PTS.find(function(x){return x.id===id;});if(!p)return;
+  $('vc-title').textContent='Tele-visit · '+p.name;
+  var checks=['Reviewed medications & adherence','Asked about hypoglycaemia symptoms','Reviewed home glucose readings','Agreed next labs before follow-up'];
+  $('vc-room').innerHTML='<div style="display:flex;gap:14px;flex-wrap:wrap">'
+   +'<div style="flex:1.4;min-width:330px"><div style="background:#10182b;border-radius:14px;height:330px;position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden">'
+   +'<div style="text-align:center"><div style="width:92px;height:92px;border-radius:50%;background:var(--nv2,#243660);color:#fff;font-size:30px;font-weight:800;display:flex;align-items:center;justify-content:center;margin:0 auto 10px;border:3px solid rgba(255,255,255,.18)">'+ini(p.name)+'</div>'
+   +'<div style="color:#fff;font-size:13px;font-weight:700">'+p.name+'</div><div style="color:rgba(255,255,255,.55);font-size:10.5px;margin-top:2px">Patient · connected via Sehhaty link</div></div>'
+   +'<div style="position:absolute;top:10px;left:12px;background:rgba(0,0,0,.45);color:#fff;font-size:10.5px;padding:3px 9px;border-radius:7px">● LIVE <span id="vc-timer">00:00</span></div>'
+   +'<div style="position:absolute;bottom:10px;right:12px;width:104px;height:68px;background:#1c2742;border-radius:9px;border:1px solid rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.7);font-size:9.5px">You (clinician)</div></div>'
+   +'<div style="display:flex;gap:8px;justify-content:center;margin-top:10px">'
+   +'<button class="btn btn-o btn-sm" onclick="toast(\'Microphone toggled\',\'\')">🎙️ Mute</button>'
+   +'<button class="btn btn-o btn-sm" onclick="toast(\'Camera toggled\',\'\')">🎥 Camera</button>'
+   +'<button class="btn btn-o btn-sm" onclick="toast(\'Arabic interpreter requested\',\'Demo\')">🗣️ Interpreter</button>'
+   +'<button class="btn btn-sm" style="background:var(--rd);color:#fff" onclick="vcEnd(\''+p.id+'\')">📞 End & send summary</button></div></div>'
+   +'<div style="flex:1;min-width:260px">'
+   +'<div class="card cp" style="margin-bottom:10px"><div class="ct" style="margin-bottom:6px">Patient snapshot</div>'
+   +'<div style="display:flex;gap:6px;flex-wrap:wrap;font-size:11px"><span class="chip ch-b">HbA1c '+p.hba1c+'%</span><span class="chip ch-b">BP '+p.sbp+'/'+p.dbp+'</span><span class="chip ch-b">eGFR '+(p.egfr==null?'—':p.egfr)+'</span><span class="chip ch-b">Adherence '+adhLabel(p.adh)+'</span></div>'
+   +'<div style="font-size:10.5px;color:var(--mu);margin-top:7px">Meds: '+p.meds.join(' · ')+'</div></div>'
+   +'<div class="card cp" style="margin-bottom:10px"><div class="ct" style="margin-bottom:6px">Visit checklist</div>'
+   +checks.map(function(c,i){return '<label style="display:flex;gap:8px;align-items:center;padding:5px 0;font-size:11.5px;cursor:pointer"><input type="checkbox" id="vc-c'+i+'"> '+c+'</label>';}).join('')+'</div>'
+   +'<div class="card cp"><div class="ct" style="margin-bottom:6px">Visit notes</div><textarea id="vc-notes" rows="4" placeholder="Assessment & plan…" style="width:100%;padding:8px;border:1px solid var(--bdr);border-radius:8px;font-size:12px;font-family:inherit"></textarea></div>'
+   +'</div></div>';
+  openModal('vc-modal');
+  VC_S=0;clearInterval(VC_T);VC_T=setInterval(function(){VC_S++;var e=$('vc-timer');if(e)e.textContent=('0'+Math.floor(VC_S/60)).slice(-2)+':'+('0'+VC_S%60).slice(-2);},1000);
+}
+function vcClose(){clearInterval(VC_T);closeModal('vc-modal');}
+function vcEnd(id){
+  var p=PTS.find(function(x){return x.id===id;});if(!p)return;
+  clearInterval(VC_T);
+  var d=new Date().toISOString().split('T')[0];
+  var notes=$('vc-notes')&&$('vc-notes').value.trim();
+  VCB[id]={status:'done',date:d};vcSave();
+  p.lastContact=d;p.teamMsgs=p.teamMsgs||[];
+  p.teamMsgs.push({from:(currentUser()||{name:'Physician'}).name,role:'Physician',text:'Tele-visit completed ('+('0'+Math.floor(VC_S/60)).slice(-2)+':'+('0'+VC_S%60).slice(-2)+' min)'+(notes?' — '+notes:'')+'. After-visit summary sent to patient.',date:d});
+  closeModal('vc-modal');
+  toast('Tele-visit completed','Clinic slot freed · summary ready to send');
+  updVCBadge();doVC();
+  openAVS(id);
+}
+setTimeout(function(){try{updVCBadge();}catch(e){}},600);
 
 /* ───────────── AFTER-VISIT PATIENT SUMMARY (Arabic, patient-facing) ───────────── */
 function avsLv(p){var tgt=p.dm_type==='T1'?7:7.5;
