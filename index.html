@@ -1569,8 +1569,38 @@ function delTask(tid){window.TODO=(window.TODO||[]).filter(function(x){return x.
 function doTasks(){var el=$('tasks-body');if(!el)return;var T=window.TODO||[];var open=T.filter(function(t){return t.status==='open';}),done=T.filter(function(t){return t.status==='done';});
   if($('tk-open'))$('tk-open').textContent=open.length;if($('tk-done'))$('tk-done').textContent=done.length;
   var icon={Message:'✉',Call:'📞',Appointment:'📅',Investigations:'🩸','MD review':'💊',Educator:'📚'};
-  function rowHtml(t){return '<div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--bdr)"><span style="font-size:16px">'+(icon[t.type]||'•')+'</span><div style="flex:1"><div style="font-size:12.5px;font-weight:700">'+t.type+' — '+t.pname+' <span class="type-badge '+t.dm+'">'+t.dm+'</span></div><div style="font-size:10px;color:var(--mu)">'+(t.note?t.note+' · ':'')+'by '+t.by+' ('+t.role+') · '+t.date+'</div></div><button class="btn btn-o btn-xs" onclick="openPt(\''+t.pid+'\')">Open</button><button class="btn '+(t.status==='open'?'btn-g':'btn-o')+' btn-xs" onclick="doneTask(\''+t.id+'\')">'+(t.status==='open'?'✓ Done':'↺ Reopen')+'</button><button class="btn btn-o btn-xs" title="Remove" onclick="delTask(\''+t.id+'\')">✕</button></div>';}
-  el.innerHTML='<div style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--rd);margin:4px 0 6px">Open ('+open.length+')</div>'+(open.length?open.map(rowHtml).join(''):'<div style="font-size:12px;color:var(--gr);padding:8px">✓ Nothing outstanding.</div>')+'<div style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--mu);margin:16px 0 6px">Completed ('+done.length+')</div>'+(done.length?done.map(rowHtml).join(''):'<div style="font-size:12px;color:var(--mu);padding:8px">None yet.</div>');
+  function attEsc(s){return String(s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');}
+  function chip(t){
+    var tip=attEsc((t.note?t.note+' · ':'')+'by '+t.by+' ('+t.role+')');
+    return '<span title="'+tip+'" style="display:inline-flex;align-items:center;gap:7px;background:var(--bg,#f6f8fb);border:1px solid var(--bdr);border-radius:9px;padding:5px 10px;font-size:11px;font-weight:600;margin:3px 6px 3px 0'+(t.status==='done'?';opacity:.55':'')+'">'
+     +(icon[t.type]||'•')+' '+t.type
+     +'<span style="color:var(--mu);font-weight:400;font-size:9.5px">'+t.date+'</span>'
+     +(t.status==='open'
+        ?'<span title="Mark done" style="cursor:pointer;color:var(--gr);font-weight:800" onclick="doneTask(\''+t.id+'\')">✓</span>'
+        :'<span title="Reopen" style="cursor:pointer;color:var(--am);font-weight:800" onclick="doneTask(\''+t.id+'\')">↺</span>')
+     +'<span title="Remove" style="cursor:pointer;color:var(--rd);font-weight:700" onclick="delTask(\''+t.id+'\')">✕</span></span>';}
+  function groupHtml(list){
+    var by={},order=[];
+    list.forEach(function(t){if(!by[t.pid]){by[t.pid]=[];order.push(t.pid);}by[t.pid].push(t);});
+    return order.map(function(pid){
+      var ts=by[pid];
+      var p=PTS.find(function(x){return x.id===pid;})||{name:ts[0].pname,dm_type:ts[0].dm};
+      var notes=ts.filter(function(t){return t.note;}).map(function(t){return '<div style="font-size:10px;color:var(--mu);margin-top:3px">'+(icon[t.type]||'•')+' '+t.note+'</div>';}).join('');
+      return '<div class="card cp" style="margin-bottom:9px;padding:10px 14px">'
+       +'<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">'
+       +'<span style="font-size:12.5px;font-weight:800;color:var(--nv);cursor:pointer;text-decoration:underline;text-decoration-color:var(--bdr);text-underline-offset:3px" onclick="openPt(\''+pid+'\')">'+p.name+'</span>'
+       +'<span class="type-badge '+(p.dm_type||ts[0].dm)+'">'+(p.dm_type||ts[0].dm)+'</span>'
+       +(p.mrn?'<span style="font-size:10px;color:var(--mu)">'+p.mrn+' · '+(p.centre||'')+' · '+(p.doctor||'')+'</span>':'')
+       +'<span style="margin-left:auto;font-size:10px;font-weight:700;color:var(--mu)">'+ts.length+' item'+(ts.length>1?'s':'')+'</span>'
+       +'<button class="btn btn-o btn-xs" onclick="openPt(\''+pid+'\')">Open patient</button></div>'
+       +'<div style="margin-top:7px;display:flex;flex-wrap:wrap;align-items:center">'+ts.map(chip).join('')+'</div>'
+       +notes+'</div>';
+    }).join('');
+  }
+  el.innerHTML='<div style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--rd);margin:4px 0 8px">Open ('+open.length+') — grouped by patient</div>'
+   +(open.length?groupHtml(open):'<div style="font-size:12px;color:var(--gr);padding:8px">✓ Nothing outstanding.</div>')
+   +'<div style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--mu);margin:16px 0 8px">Completed ('+done.length+')</div>'
+   +(done.length?groupHtml(done):'<div style="font-size:12px;color:var(--mu);padding:8px">None yet.</div>');
 }
 (function(){loadTodo();try{updTaskBadge();}catch(e){}})();
 
