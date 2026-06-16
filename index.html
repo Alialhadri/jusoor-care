@@ -1074,7 +1074,7 @@ async function loadAI(id){
 var ESTEPS=['Demographics','DM Type & Labs','Metabolic Data','Medications','Screening','AI Review'];
 function initEnroll(){_es=0;_ed={};renderSteps();renderPane();}
 function renderSteps(){var el=$('enroll-stepper');if(!el)return;el.innerHTML=ESTEPS.map(function(s,i){var c=i<_es?'done':i===_es?'on':'';return '<div class="step '+c+'">'+(i>0?'<div class="step-ln'+(i<=_es?' done':'')+'"></div>':'')+'<div class="step-n">'+(i<_es?'✓':(i+1))+'</div><div class="step-lbl">'+s+'</div></div>';}).join('');}
-function renderPane(){var b=$('enroll-body');if(!b)return;var btns='<div style="display:flex;justify-content:space-between;margin-top:20px;padding-top:14px;border-top:1px solid var(--bdr)">'+(_es>0?'<button class="btn btn-o" onclick="ePrev()">← Back</button>':'<div></div>')+(_es<ESTEPS.length-1?'<button class="btn btn-p" onclick="eNext()">Continue →</button>':'<button class="btn btn-g" onclick="doEnroll()">✓ Enrol Patient</button>')+'</div>';var ps={0:p0(),1:p1(),2:p2(),3:p3(),4:p4(),5:p5()};b.innerHTML='<div class="card cp">'+(ps[_es]||'')+btns+'</div>';fillFields();if(_es===2)setTimeout(liveRisk,100);}
+function renderPane(){var b=$('enroll-body');if(!b)return;var btns='<div style="display:flex;justify-content:space-between;margin-top:20px;padding-top:14px;border-top:1px solid var(--bdr)">'+(_es>0?'<button class="btn btn-o" onclick="ePrev()">← Back</button>':'<div></div>')+(_es<ESTEPS.length-1?'<button class="btn btn-p" onclick="eNext()">Continue →</button>':'<button class="btn btn-g" onclick="doEnroll()">✓ Enrol Patient</button>')+'</div>';var ps={0:p0(),1:p1(),2:p2(),3:p3(),4:p4(),5:p5()};b.innerHTML='<div class="card cp">'+(ps[_es]||'')+btns+'</div>';fillFields();if(_es===2)setTimeout(function(){liveRisk();liveAscvd();},100);}
 function ePrev(){saveVals();_es--;renderSteps();renderPane();}
 function eNext(){saveVals();_es++;renderSteps();renderPane();}
 function saveVals(){document.querySelectorAll('#enroll-body input,#enroll-body select,#enroll-body textarea').forEach(function(el){if(el.id)_ed[el.id]=el.type==='checkbox'?el.checked:el.value;});}
@@ -1082,7 +1082,7 @@ function fillFields(){Object.keys(_ed).forEach(function(id){var el=$(id);if(!el)
 function p0(){return '<div style="display:flex;justify-content:flex-end;margin-bottom:10px"><button class="btn btn-o btn-sm" onclick="raqeemImport()">⤓ Import from Raqeem (NPHIES)</button></div><div class="fsec">Patient Demographics</div><div class="g2"><div class="fg"><label>Full Name</label><input id="e-name" type="text" placeholder="Mohammed Al-Otaibi"></div><div class="fg"><label>MRN / National ID</label><input id="e-mrn" type="text" placeholder="SA-XXXX"></div></div><div class="g4"><div class="fg"><label>Age</label><input id="e-age" type="number" list="dl-age" placeholder="45" min="1" max="110"></div><div class="fg"><label>Sex</label><select id="e-sex" onchange="togglePreg()"><option value="M">Male</option><option value="F">Female</option></select></div><div class="fg"><label>BMI (kg/m²)</label><input id="e-bmi" type="number" list="dl-bmi" step="1" min="12" max="60" placeholder="28"></div><div class="fg" id="preg-wrap" style="display:none"><label>Pregnant?</label><select id="e-preg"><option value="No">No</option><option value="Yes">Yes</option></select></div></div><datalist id="dl-age"><option>10<option>11<option>12<option>13<option>14<option>15<option>16<option>17<option>18<option>19<option>20<option>21<option>22<option>23<option>24<option>25<option>26<option>27<option>28<option>29<option>30<option>31<option>32<option>33<option>34<option>35<option>36<option>37<option>38<option>39<option>40<option>41<option>42<option>43<option>44<option>45<option>46<option>47<option>48<option>49<option>50<option>51<option>52<option>53<option>54<option>55<option>56<option>57<option>58<option>59<option>60<option>61<option>62<option>63<option>64<option>65<option>66<option>67<option>68<option>69<option>70<option>71<option>72<option>73<option>74<option>75<option>76<option>77<option>78<option>79<option>80<option>81<option>82<option>83<option>84<option>85<option>86<option>87<option>88<option>89<option>90<option>91<option>92<option>93<option>94<option>95<option>96<option>97<option>98<option>99<option>100</datalist><datalist id="dl-bmi"><option>12<option>13<option>14<option>15<option>16<option>17<option>18<option>19<option>20<option>21<option>22<option>23<option>24<option>25<option>26<option>27<option>28<option>29<option>30<option>31<option>32<option>33<option>34<option>35<option>36<option>37<option>38<option>39<option>40<option>41<option>42<option>43<option>44<option>45<option>46<option>47<option>48<option>49<option>50<option>51<option>52<option>53<option>54<option>55<option>56<option>57<option>58<option>59<option>60</datalist><div class="g2"><div class="fg"><label>PHC Centre</label><select id="e-centre"><option>Al-Olaya</option><option>Al-Malaz</option><option>Al-Yarmouk</option><option>Al-Wazarat</option><option>Al-Naseem</option></select></div><div class="fg"><label>Assigned Physician</label><select id="e-doctor"><option>Dr. Al-Qahtani</option><option>Dr. Al-Harbi</option><option>Dr. Al-Mutairi</option><option>Dr. Al-Dossari</option><option>Dr. Al-Otaibi</option></select></div></div><div class="g2"><div class="fg"><label>Care Coordinator</label><select id="e-coord"><option>Sarah Al-Ghamdi</option><option>Mona Al-Harbi</option><option>Khalid Al-Otaibi</option></select></div><div class="fg"><label>Diabetes Educator</label><select id="e-educator"><option>Reem Al-Dosari</option><option>Huda Al-Shehri</option><option>Abdullah Al-Mutairi</option></select></div></div><div class="fg"><label>Reason for Enrolment</label><input id="e-summary" list="dl-reason" placeholder="Start typing… e.g. Newly diagnosed T2DM" style="width:100%;padding:9px 11px;border:1px solid var(--bdr);border-radius:9px;font-size:13.5px;font-family:inherit"><datalist id="dl-reason"><option>Newly diagnosed T2DM, poorly controlled</option><option>Newly diagnosed type 1 DM</option><option>Newly diagnosed gestational DM</option><option>Uncontrolled HbA1c — treatment intensification</option><option>Insulin initiation required</option><option>Diabetic kidney disease (CKD)</option><option>Poor medication adherence</option><option>Referred from emergency department</option><option>Pre-diabetes — prevention programme</option><option>Annual diabetes review</option><option>Recurrent hypoglycaemia</option><option>Diabetic foot risk</option></datalist></div>';}
 function p1(){return '<div class="fsec">DM Classification</div><div class="g2"><div class="fg"><label>DM Type</label><select id="e-dm-type" onchange="updateDmFields()"><option value="T2">Type 2 DM (T2DM)</option><option value="T1">Type 1 DM (T1DM)</option><option value="GDM">Gestational DM (GDM)</option></select></div><div class="fg"><label>Diagnosis Date</label><div style="display:flex;gap:8px"><select id="e-dx-year" style="flex:1"><option>2026</option><option>2025</option><option>2024</option><option>2023</option><option>2022</option><option>2021</option><option>2020</option><option>2019</option><option>2018</option><option>2017</option><option>2016</option><option>2015</option><option>2014</option><option>2013</option><option>2012</option><option>2011</option><option>2010</option><option>2009</option><option>2008</option><option>2007</option><option>2006</option><option>2005</option><option>2004</option><option>2003</option><option>2002</option><option>2001</option><option>2000</option><option>1999</option><option>1998</option><option>1997</option><option>1996</option><option>1995</option><option>1994</option><option>1993</option><option>1992</option><option>1991</option><option>1990</option><option>1989</option><option>1988</option><option>1987</option><option>1986</option><option>1985</option><option>1984</option><option>1983</option><option>1982</option><option>1981</option><option>1980</option><option>1979</option><option>1978</option><option>1977</option><option>1976</option></select><select id="e-dx-month" style="flex:1"><option value="01">Jan</option><option value="02">Feb</option><option value="03">Mar</option><option value="04">Apr</option><option value="05">May</option><option value="06">Jun</option><option value="07">Jul</option><option value="08">Aug</option><option value="09">Sep</option><option value="10">Oct</option><option value="11">Nov</option><option value="12">Dec</option></select></div></div></div><div id="dm-type-specific"></div>';}
 function updateDmFields(){var el=$('e-dm-type');if(!el)return;if(el.value==='GDM'&&enrolSex()==='M'){el.value='T2';}var t=el.value,s=$('dm-type-specific');if(!s)return;togglePreg&&togglePreg();if(t==='T1'||t==='LADA'){s.innerHTML='<div class="card cp" style="background:var(--pul);border-color:#d8b4fe"><div class="fsec" style="color:var(--pu)">Autoimmune Tests</div><div class="g3"><div class="fg"><label>C-Peptide (ng/mL)</label><input id="e-cp" type="number" step="0.01" placeholder="0.2"><div class="hint">Low &lt;0.6 = T1/LADA</div></div><div class="fg"><label>GAD-65</label><select id="e-gad65"><option value="false">Negative</option><option value="true">Positive</option></select></div><div class="fg"><label>IA-2</label><select id="e-ia2"><option value="false">Negative</option><option value="true">Positive</option></select></div></div><div class="fg"><label>Insulin Regimen</label><select id="e-insulin"><option value="">Not on insulin yet</option><option>Basal-only (Glargine/Detemir)</option><option>Basal-bolus (MDI)</option><option>Insulin pump (CSII)</option><option>Hybrid closed-loop pump</option></select></div></div>';}else if(t==='GDM'){s.innerHTML='<div class="card cp" style="background:var(--aml);border-color:#fbbf24"><div class="fsec" style="color:var(--am)">Gestational Profile</div><div class="g2"><div class="fg"><label>GA (weeks)</label><input id="e-ga" type="number" placeholder="28"></div><div class="fg"><label>Previous GDM?</label><select id="e-prev-gdm"><option value="false">No</option><option value="true">Yes</option></select></div></div><div class="g3"><div class="fg"><label>OGTT 0h (mmol/L)</label><input id="e-ogtt0" type="number" step="0.1" placeholder="5.8"></div><div class="fg"><label>OGTT 1h</label><input id="e-ogtt1" type="number" step="0.1" placeholder="10.2"></div><div class="fg"><label>OGTT 2h</label><input id="e-ogtt2" type="number" step="0.1" placeholder="8.8"></div></div></div>';}else{s.innerHTML='<div class="g2"><div class="fg"><label>Family History of DM</label><select id="e-famhx"><option value="false">None</option><option value="true">First-degree relative</option></select></div>'+((_ed['e-sex']==='F')?'<div class="fg"><label>Previous GDM</label><select id="e-prevgdm"><option value="false">No</option><option value="true">Yes</option></select></div>':'')+'</div>';}}
-function p2(){return '<div class="fsec">Metabolic Parameters</div><div class="g3"><div class="fg"><label>HbA1c (%)</label><input id="e-hba1c" type="number" step="0.1" placeholder="8.5" oninput="liveRisk()"></div><div class="fg"><label>FBS (mmol/L)</label><input id="e-fbs" type="number" step="0.1" placeholder="9.4"></div><div class="fg"><label>PPG (mmol/L)</label><input id="e-ppg" type="number" step="0.1" placeholder="12.8"></div></div><div class="g3"><div class="fg"><label>SBP (mmHg)</label><input id="e-sbp" type="number" list="dl-sbp" placeholder="136" oninput="liveRisk()"></div><div class="fg"><label>DBP (mmHg)</label><input id="e-dbp" type="number" list="dl-dbp" placeholder="84"></div><div class="fg"><label>Weight (kg)</label><input id="e-weight" type="number" list="dl-wt" placeholder="82"></div></div><div class="g4"><div class="fg"><label>Total Chol (mmol/L)</label><input id="e-chol" type="number" step="0.1" placeholder="4.8"></div><div class="fg"><label>LDL (mmol/L)</label><input id="e-ldl" type="number" step="0.1" placeholder="3.2"></div><div class="fg"><label>HDL (mmol/L)</label><input id="e-hdl" type="number" step="0.1" placeholder="1.0"></div><div class="fg"><label>TG (mmol/L)</label><input id="e-tg" type="number" step="0.1" placeholder="2.4"></div></div><div class="g3"><div class="fg"><label>eGFR (ml/min)</label><input id="e-egfr" type="number" list="dl-egfr" placeholder="68" oninput="liveRisk()"></div><div class="fg"><label>ACR (mg/g)</label><input id="e-acr" type="number" list="dl-acr" placeholder="28"></div><div class="fg"><label>Medication adherence</label><select id="e-adh"><option value="">&#8212; select &#8212;</option><option value="90">Good</option><option value="70">Fair</option><option value="45">Poor</option></select></div></div><datalist id="dl-sbp"><option>110<option>120<option>130<option>140<option>150<option>160<option>170<option>180</datalist><datalist id="dl-dbp"><option>60<option>70<option>80<option>90<option>100<option>110</datalist><datalist id="dl-wt"><option>50<option>60<option>70<option>80<option>90<option>100<option>110<option>120</datalist><datalist id="dl-egfr"><option>15<option>30<option>45<option>60<option>75<option>90<option>105<option>120</datalist><datalist id="dl-acr"><option>5<option>15<option>30<option>60<option>150<option>300</datalist><datalist id="dl-adh"><option>40<option>50<option>60<option>70<option>80<option>90<option>100</datalist><div id="e-risk-live"></div>';}
+function p2(){return '<div class="fsec">Metabolic Parameters</div><div class="g3"><div class="fg"><label>HbA1c (%)</label><input id="e-hba1c" type="number" step="0.1" placeholder="8.5" oninput="liveRisk()"></div><div class="fg"><label>FBS (mmol/L)</label><input id="e-fbs" type="number" step="0.1" placeholder="9.4"></div><div class="fg"><label>PPG (mmol/L)</label><input id="e-ppg" type="number" step="0.1" placeholder="12.8"></div></div><div class="g3"><div class="fg"><label>SBP (mmHg)</label><input id="e-sbp" type="number" list="dl-sbp" placeholder="136" oninput="liveRisk();liveAscvd()"></div><div class="fg"><label>DBP (mmHg)</label><input id="e-dbp" type="number" list="dl-dbp" placeholder="84"></div><div class="fg"><label>Weight (kg)</label><input id="e-weight" type="number" list="dl-wt" placeholder="82"></div></div><div class="g4"><div class="fg"><label>Total Chol (mmol/L)</label><input id="e-chol" type="number" step="0.1" placeholder="4.8" oninput="liveAscvd()"></div><div class="fg"><label>LDL (mmol/L)</label><input id="e-ldl" type="number" step="0.1" placeholder="3.2"></div><div class="fg"><label>HDL (mmol/L)</label><input id="e-hdl" type="number" step="0.1" placeholder="1.0" oninput="liveAscvd()"></div><div class="fg"><label>TG (mmol/L)</label><input id="e-tg" type="number" step="0.1" placeholder="2.4"></div></div><div class="g4"><div class="fg"><label>Serum Creatinine (µmol/L)</label><input id="e-cr" type="number" step="1" placeholder="80" oninput="calcEgfr()"></div><div class="fg"><label>eGFR (mL/min/1.73m²)</label><input id="e-egfr" type="number" list="dl-egfr" placeholder="auto from creatinine" oninput="liveRisk();liveAscvd()"></div><div class="fg"><label>ACR (mg/g)</label><input id="e-acr" type="number" list="dl-acr" placeholder="28"></div><div class="fg"><label>Medication adherence</label><select id="e-adh"><option value="">&#8212; select &#8212;</option><option value="90">Good</option><option value="70">Fair</option><option value="45">Poor</option></select></div></div><datalist id="dl-sbp"><option>110<option>120<option>130<option>140<option>150<option>160<option>170<option>180</datalist><datalist id="dl-dbp"><option>60<option>70<option>80<option>90<option>100<option>110</datalist><datalist id="dl-wt"><option>50<option>60<option>70<option>80<option>90<option>100<option>110<option>120</datalist><datalist id="dl-egfr"><option>15<option>30<option>45<option>60<option>75<option>90<option>105<option>120</datalist><datalist id="dl-acr"><option>5<option>15<option>30<option>60<option>150<option>300</datalist><datalist id="dl-adh"><option>40<option>50<option>60<option>70<option>80<option>90<option>100</datalist><div class="fsec" style="margin-top:18px">ASCVD 10-Year Risk Calculator</div><div style="font-size:10px;color:var(--mu);margin-bottom:8px">ACC/AHA Pooled Cohort Equations — uses Age, Sex, Total Chol, HDL and SBP above, plus the factors below.</div><div class="g4"><div class="fg"><label>Race / Ethnicity</label><select id="e-race" onchange="liveAscvd()"><option value="white">White / Other</option><option value="aa">African-American</option></select></div><div class="fg"><label>Current smoker</label><select id="e-smoker" onchange="liveAscvd()"><option value="0">No</option><option value="1">Yes</option></select></div><div class="fg"><label>On BP treatment</label><select id="e-bptx" onchange="liveAscvd()"><option value="0">No</option><option value="1">Yes</option></select></div><div class="fg"><label>Diabetes</label><select id="e-dmflag" onchange="liveAscvd()"><option value="1">Yes</option><option value="0">No</option></select></div></div><div id="e-ascvd-out"></div><div id="e-risk-live"></div>';}
 function liveRisk(){var h=parseFloat($('e-hba1c')&&$('e-hba1c').value)||0,s=parseInt($('e-sbp')&&$('e-sbp').value)||0,e=parseInt($('e-egfr')&&$('e-egfr').value)||100;if(!h)return;var sc=Math.min((h>10?40:h>9?28:h>8?18:h>7.5?10:4)+(s>160?20:s>140?11:3)+(e<30?30:e<45?18:e<60?8:0),100);var tier=sc>65?'High':sc>40?'Moderate':'Low';var col={High:'var(--rd)',Moderate:'var(--am)',Low:'var(--gr)'}[tier];var el=$('e-risk-live');if(el)el.innerHTML='<div style="display:flex;gap:12px;align-items:center;padding:12px 14px;background:var(--bg);border-radius:9px;border:1px solid var(--bdr);margin-top:10px"><div style="font-size:28px;font-weight:900;color:'+col+'">'+sc+'%</div><div><div style="font-size:13px;font-weight:700;color:'+col+'">'+tier+' Risk</div><div style="font-size:10px;color:var(--mu)">AI risk score · Full analysis on final step</div></div></div>';}
 function p3(){
   var t=_ed['e-dm-type']||'T2';
@@ -1113,11 +1113,192 @@ function p3(){
   m+='<div class="fg" style="margin-top:14px"><label>Other medications</label><textarea id="e-other-meds" rows="2" placeholder="e.g. Omeprazole 20mg, Vitamin D3 1000IU…"></textarea></div>';
   return m;
 }
+/* ===== Data-driven medication formulary with common-dose pickers (overrides legacy p3) ===== */
+var MEDCAT=[
+ {label:'Glucose-Lowering Agents',color:'var(--bl)',types:['T2','LADA','Pre'],drugs:[
+  {id:'met',name:'Metformin',doses:['500mg OD','500mg BD','850mg BD','1000mg OD','1000mg BD'],note:['mn-g','✓ ADA first-line']},
+  {id:'metxr',name:'Metformin XR',doses:['500mg OD','1000mg OD','2000mg OD']},
+  {id:'empa',name:'Empagliflozin (Jardiance)',doses:['10mg OD','25mg OD'],note:['mn-g','✓ SGLT2i · CV/kidney']},
+  {id:'dapa',name:'Dapagliflozin (Forxiga)',doses:['5mg OD','10mg OD'],note:['mn-g','✓ SGLT2i · kidney/HF']},
+  {id:'cana',name:'Canagliflozin (Invokana)',doses:['100mg OD','300mg OD']},
+  {id:'metempa',name:'Metformin + Empagliflozin (Synjardy)',doses:['5/500mg BD','5/1000mg BD','12.5/500mg BD','12.5/1000mg BD'],note:['mn-g','Combo']},
+  {id:'metdapa',name:'Metformin + Dapagliflozin (Xigduo XR)',doses:['5/500mg OD','5/1000mg OD','10/1000mg OD'],note:['mn-g','Combo']},
+  {id:'metsita',name:'Metformin + Sitagliptin (Janumet)',doses:['50/500mg BD','50/1000mg BD'],note:['mn-g','Combo']},
+  {id:'metlina',name:'Metformin + Linagliptin (Jentadueto)',doses:['2.5/500mg BD','2.5/1000mg BD'],note:['mn-g','Combo']},
+  {id:'sema',name:'Semaglutide SC (Ozempic)',doses:['0.25mg/wk','0.5mg/wk','1mg/wk','2mg/wk'],note:['mn-g','✓ GLP-1 · CV/weight']},
+  {id:'semapo',name:'Semaglutide PO (Rybelsus)',doses:['3mg OD','7mg OD','14mg OD']},
+  {id:'lira',name:'Liraglutide (Victoza)',doses:['0.6mg OD','1.2mg OD','1.8mg OD'],note:['mn-g','✓ LEADER']},
+  {id:'dula',name:'Dulaglutide (Trulicity)',doses:['0.75mg/wk','1.5mg/wk','3mg/wk','4.5mg/wk']},
+  {id:'tirz',name:'Tirzepatide (Mounjaro)',doses:['2.5mg/wk','5mg/wk','7.5mg/wk','10mg/wk','12.5mg/wk','15mg/wk'],note:['mn-g','✓ GIP/GLP-1']},
+  {id:'sita',name:'Sitagliptin (Januvia)',doses:['25mg OD','50mg OD','100mg OD']},
+  {id:'lina',name:'Linagliptin (Trajenta)',doses:['5mg OD']},
+  {id:'saxa',name:'Saxagliptin (Onglyza)',doses:['2.5mg OD','5mg OD'],note:['mn-a','⚠ HF caution']},
+  {id:'vilda',name:'Vildagliptin (Galvus)',doses:['50mg OD','50mg BD']},
+  {id:'glicla',name:'Gliclazide MR (Diamicron)',doses:['30mg OD','60mg OD','90mg OD','120mg OD'],note:['mn-a','⚠ hypo/CKD']},
+  {id:'glime',name:'Glimepiride (Amaryl)',doses:['1mg OD','2mg OD','3mg OD','4mg OD'],note:['mn-a','⚠ hypo risk']},
+  {id:'glib',name:'Glibenclamide',doses:['2.5mg OD','5mg OD','10mg/day'],note:['mn-r','⚠ avoid elderly/CKD']},
+  {id:'piog',name:'Pioglitazone (Actos)',doses:['15mg OD','30mg OD','45mg OD'],note:['mn-a','⚠ avoid HF']},
+  {id:'piogglime',name:'Pioglitazone + Glimepiride',doses:['30/2mg OD','30/4mg OD'],note:['mn-a','Combo · TZD+SU']}
+ ]},
+ {label:'Insulin Therapy',color:'var(--pu)',types:['T1','T2','LADA'],drugs:[
+  {id:'glar',name:'Insulin Glargine (Lantus/Toujeo)',doses:['U-100 OD','U-300 OD','titrate to FBS']},
+  {id:'detem',name:'Insulin Detemir (Levemir)',doses:['OD','BD']},
+  {id:'degl',name:'Insulin Degludec (Tresiba)',doses:['U-100 OD','U-200 OD'],note:['mn-g','✓ ultra-long basal']},
+  {id:'nph',name:'Insulin NPH',doses:['nocte','BD']},
+  {id:'aspart',name:'Insulin Aspart (NovoRapid)',doses:['with meals']},
+  {id:'lispro',name:'Insulin Lispro (Humalog)',doses:['with meals']},
+  {id:'glulis',name:'Insulin Glulisine (Apidra)',doses:['with meals']},
+  {id:'novomix',name:'Biphasic Aspart (NovoMix 30)',doses:['BD with meals']},
+  {id:'hummix25',name:'Lispro Mix 25 (Humalog Mix 25)',doses:['BD']},
+  {id:'hummix50',name:'Lispro Mix 50 (Humalog Mix 50)',doses:['BD']},
+  {id:'ryzodeg',name:'Degludec/Aspart (Ryzodeg)',doses:['OD','BD'],note:['mn-g','co-formulation']},
+  {id:'iglarlixi',name:'Glargine + Lixisenatide (Soliqua)',doses:['15-60 units OD'],note:['mn-g','basal + GLP-1']},
+  {id:'pump',name:'Insulin Pump (CSII)',doses:['continuous SC']},
+  {id:'hybrid',name:'Hybrid Closed-Loop Pump',doses:['auto-mode'],note:['mn-g','✓ best TIR']}
+ ]},
+ {label:'GDM Management',color:'var(--am)',types:['GDM'],drugs:[
+  {id:'mnt',name:'Medical Nutrition Therapy',doses:['first-line'],note:['mn-g','✓ always']},
+  {id:'gnph',name:'Insulin NPH',doses:['bedtime','BD']},
+  {id:'gaspart',name:'Insulin Aspart',doses:['meal bolus']},
+  {id:'gmet',name:'Metformin (per protocol)',doses:['500mg BD','1000mg BD'],note:['mn-a','local protocol']}
+ ]},
+ {label:'Renal Protection (RAS / MRA)',color:'var(--te)',types:['T1','T2','LADA','Pre'],drugs:[
+  {id:'rami',name:'Ramipril (ACEi)',doses:['2.5mg OD','5mg OD','10mg OD'],note:['mn-g','✓ DM + albuminuria']},
+  {id:'lisi',name:'Lisinopril (ACEi)',doses:['5mg OD','10mg OD','20mg OD','40mg OD']},
+  {id:'enal',name:'Enalapril (ACEi)',doses:['5mg OD','10mg BD','20mg BD']},
+  {id:'vals',name:'Valsartan (ARB)',doses:['80mg OD','160mg OD','320mg OD']},
+  {id:'losa',name:'Losartan (ARB)',doses:['50mg OD','100mg OD']},
+  {id:'irbe',name:'Irbesartan (ARB)',doses:['150mg OD','300mg OD'],note:['mn-g','✓ IDNT']},
+  {id:'telmi',name:'Telmisartan (ARB)',doses:['40mg OD','80mg OD']},
+  {id:'finer',name:'Finerenone (Kerendia, ns-MRA)',doses:['10mg OD','20mg OD'],note:['mn-g','✓ FIDELIO · monitor K+']}
+ ]},
+ {label:'Hypertension & Cardiac',color:'var(--rd)',types:['T1','T2','LADA','Pre'],drugs:[
+  {id:'amlo',name:'Amlodipine (CCB)',doses:['5mg OD','10mg OD']},
+  {id:'nifed',name:'Nifedipine XL (CCB)',doses:['30mg OD','60mg OD']},
+  {id:'biso',name:'Bisoprolol (BB)',doses:['2.5mg OD','5mg OD','10mg OD']},
+  {id:'carve',name:'Carvedilol (BB)',doses:['6.25mg BD','12.5mg BD','25mg BD']},
+  {id:'hctz',name:'Hydrochlorothiazide',doses:['12.5mg OD','25mg OD'],note:['mn-a','⚠ may ↑ glucose']},
+  {id:'indap',name:'Indapamide (thiazide-like)',doses:['1.5mg OD','2.5mg OD'],note:['mn-g','preferred']},
+  {id:'praz',name:'Prazosin (alpha-blocker)',doses:['0.5mg BD','1mg BD','2mg BD']},
+  {id:'cloni',name:'Clonidine',doses:['75mcg BD','150mcg BD']},
+  {id:'amlohctz',name:'Amlodipine + HCTZ',doses:['5/12.5mg OD','10/25mg OD'],note:['','Combo']},
+  {id:'codiovan',name:'Valsartan + HCTZ (Co-Diovan)',doses:['80/12.5mg OD','160/25mg OD'],note:['','Combo']},
+  {id:'exforge',name:'Valsartan + Amlodipine (Exforge)',doses:['5/80mg OD','10/160mg OD'],note:['','Combo']},
+  {id:'arni',name:'Sacubitril/Valsartan (ARNI)',doses:['24/26mg BD','49/51mg BD','97/103mg BD'],note:['mn-g','HFrEF']},
+  {id:'spiro',name:'Spironolactone (MRA)',doses:['25mg OD','50mg OD'],note:['mn-a','resistant HTN/HF']}
+ ]},
+ {label:'Lipid / CV Protection',color:'var(--nv)',types:['T1','T2','LADA','Pre'],drugs:[
+  {id:'ator',name:'Atorvastatin',doses:['10mg','20mg','40mg','80mg'],note:['mn-g','✓ statin']},
+  {id:'rosu',name:'Rosuvastatin',doses:['5mg','10mg','20mg','40mg']},
+  {id:'simva',name:'Simvastatin',doses:['10mg','20mg','40mg']},
+  {id:'ezet',name:'Ezetimibe',doses:['10mg OD']},
+  {id:'atorezet',name:'Atorvastatin + Ezetimibe',doses:['10/10mg','40/10mg'],note:['','Combo']},
+  {id:'bemp',name:'Bempedoic acid',doses:['180mg OD']},
+  {id:'pcsk9',name:'PCSK9i (Evolocumab/Alirocumab)',doses:['140mg q2wk','420mg monthly'],note:['mn-g','very-high-risk']},
+  {id:'feno',name:'Fenofibrate',doses:['145mg OD','160mg OD'],note:['','high TG']},
+  {id:'ico',name:'Icosapent ethyl',doses:['2g BD'],note:['mn-g','✓ REDUCE-IT']},
+  {id:'asp',name:'Aspirin',doses:['75mg OD','81mg OD','100mg OD'],note:['','2° prevention']},
+  {id:'clop',name:'Clopidogrel',doses:['75mg OD']}
+ ]},
+ {label:'Neuropathic Pain',color:'var(--am)',types:['T1','T2','LADA','Pre'],drugs:[
+  {id:'preg',name:'Pregabalin',doses:['75mg BD','150mg BD','300mg/day']},
+  {id:'gaba',name:'Gabapentin',doses:['300mg TDS','600mg TDS','900mg TDS']},
+  {id:'dulox',name:'Duloxetine',doses:['30mg OD','60mg OD'],note:['mn-g','✓ DPN']},
+  {id:'amit',name:'Amitriptyline',doses:['10mg nocte','25mg nocte','50mg nocte'],note:['mn-a','⚠ anticholinergic']}
+ ]}
+];
+function p3(){
+  var t=_ed['e-dm-type']||'T2';
+  var m='<div class="fsec">Current Medications</div><div style="font-size:11px;color:var(--mu);margin-bottom:12px">Tick a medication, then pick the dose from its dropdown.</div>';
+  MEDCAT.forEach(function(cat){
+    if(cat.types&&cat.types.indexOf(t)<0)return;
+    m+='<div style="font-size:10px;font-weight:700;color:'+cat.color+';letter-spacing:.07em;text-transform:uppercase;margin:14px 0 6px">'+cat.label+'</div><div class="med-grid">';
+    cat.drugs.forEach(function(dr){
+      var opts=(dr.doses||['—']).map(function(o){return '<option>'+o+'</option>';}).join('');
+      m+='<label class="med-item"><input type="checkbox" id="m-'+dr.id+'"><div><div class="med-name">'+dr.name+'</div>'
+        +'<select class="med-dose-sel" id="dose-m-'+dr.id+'" onclick="event.stopPropagation()" style="margin:3px 0;padding:3px 6px;border:1px solid var(--bdr);border-radius:6px;font-size:11px;font-family:inherit;max-width:100%;background:#fff">'+opts+'</select>'
+        +(dr.note?'<div class="med-note '+dr.note[0]+'">'+dr.note[1]+'</div>':'')
+        +'</div></label>';
+    });
+    m+='</div>';
+  });
+  m+='<div class="fg" style="margin-top:14px"><label>Other medications</label><textarea id="e-other-meds" rows="2" placeholder="e.g. Omeprazole 20mg, Vitamin D3 1000IU"></textarea></div>';
+  return m;
+}
+function collectMeds(d){
+  var out=[];
+  MEDCAT.forEach(function(cat){cat.drugs.forEach(function(dr){
+    var id='m-'+dr.id;
+    if(d[id]===true||d[id]==='on'){var dose=d['dose-'+id]||(dr.doses&&dr.doses[0])||'';out.push(dr.name+(dose&&dose!=='—'?' '+dose:''));}
+  });});
+  if(d['e-other-meds'])out.push(d['e-other-meds']);
+  return out;
+}
+/* ===== ASCVD 10-year risk (ACC/AHA Pooled Cohort Equations) ===== */
+function ascvd10(sex,race,age,tc_mmol,hdl_mmol,sbp,bptx,smoker,dm){
+  if(!age||!tc_mmol||!hdl_mmol||!sbp)return null;
+  if(age<40)age=40; if(age>79)age=79;
+  var tc=tc_mmol*38.67, hdl=hdl_mmol*38.67;
+  var lnAge=Math.log(age),lnTC=Math.log(tc),lnHDL=Math.log(hdl),lnSBP=Math.log(sbp);
+  var s=String(sex).toUpperCase().charAt(0), aa=(race==='aa'), x,mean,s0;
+  if(s==='F'){
+    if(aa){
+      x=17.114*lnAge+0.940*lnTC-18.920*lnHDL+4.475*lnAge*lnHDL
+        +(bptx?29.291*lnSBP-6.432*lnAge*lnSBP:27.820*lnSBP-6.087*lnAge*lnSBP)
+        +(smoker?0.691:0)+(dm?0.874:0);
+      mean=86.61; s0=0.9533;
+    }else{
+      x=-29.799*lnAge+4.884*lnAge*lnAge+13.540*lnTC-3.114*lnAge*lnTC
+        -13.578*lnHDL+3.149*lnAge*lnHDL
+        +(bptx?2.019*lnSBP:1.957*lnSBP)
+        +(smoker?7.574-1.665*lnAge:0)+(dm?0.661:0);
+      mean=-29.18; s0=0.9665;
+    }
+  }else{
+    if(aa){
+      x=2.469*lnAge+0.302*lnTC-0.307*lnHDL
+        +(bptx?1.916*lnSBP:1.809*lnSBP)
+        +(smoker?0.549:0)+(dm?0.645:0);
+      mean=19.54; s0=0.8954;
+    }else{
+      x=12.344*lnAge+11.853*lnTC-2.664*lnAge*lnTC-7.990*lnHDL+1.769*lnAge*lnHDL
+        +(bptx?1.797*lnSBP:1.764*lnSBP)
+        +(smoker?7.837-1.795*lnAge:0)+(dm?0.658:0);
+      mean=61.18; s0=0.9144;
+    }
+  }
+  var risk=1-Math.pow(s0,Math.exp(x-mean));
+  return Math.max(0,Math.min(1,risk))*100;
+}
+function ascvdCat(r){return r<5?['Low','var(--gr)']:r<7.5?['Borderline','var(--am)']:r<20?['Intermediate','var(--am)']:['High','var(--rd)'];}
+/* ===== eGFR auto-calc (CKD-EPI 2021, race-free). Creatinine entered in µmol/L. ===== */
+function calcEgfr(){
+  var cr=parseFloat($('e-cr')&&$('e-cr').value),age=parseFloat($('e-age')&&$('e-age').value),sex=($('e-sex')&&$('e-sex').value)||'M';
+  if(!cr||!age)return;
+  var scr=cr/88.42; // µmol/L -> mg/dL
+  var f=(String(sex).toUpperCase().charAt(0)==='F'),k=f?0.7:0.9,a=f?-0.241:-0.302;
+  var e=142*Math.pow(Math.min(scr/k,1),a)*Math.pow(Math.max(scr/k,1),-1.200)*Math.pow(0.9938,age)*(f?1.012:1);
+  e=Math.round(e);
+  if($('e-egfr'))$('e-egfr').value=e;
+  if(typeof liveRisk==='function')liveRisk();
+  if(typeof liveAscvd==='function')liveAscvd();
+}
+function liveAscvd(){
+  var el=$('e-ascvd-out');if(!el)return;
+  var g=function(id){return $(id)&&$(id).value;};
+  var age=parseFloat(g('e-age')),sex=g('e-sex')||'M',tc=parseFloat(g('e-chol')),hdl=parseFloat(g('e-hdl')),sbp=parseFloat(g('e-sbp'));
+  var race=g('e-race')||'white',smoker=g('e-smoker')==='1',bptx=g('e-bptx')==='1',dm=g('e-dmflag')!=='0';
+  if(!age||!tc||!hdl||!sbp){el.innerHTML='<div style="font-size:11px;color:var(--mu);padding:8px 0">Enter Age, Total Chol, HDL and SBP to calculate 10-year ASCVD risk.</div>';return;}
+  var r=ascvd10(sex,race,age,tc,hdl,sbp,bptx,smoker,dm);
+  if(r==null){el.innerHTML='';return;}
+  var c=ascvdCat(r);
+  el.innerHTML='<div style="display:flex;gap:12px;align-items:center;padding:12px 14px;background:var(--bg);border-radius:9px;border:1px solid var(--bdr);margin-top:6px"><div style="font-size:26px;font-weight:900;color:'+c[1]+'">'+r.toFixed(1)+'%</div><div><div style="font-size:13px;font-weight:700;color:'+c[1]+'">'+c[0]+' 10-yr risk</div><div style="font-size:10px;color:var(--mu)">ACC/AHA Pooled Cohort Eq.'+(age<=40||age>=79?' · age clamped to 40-79':'')+'</div></div></div>';
+}
 function p4(){return '<div class="fsec">Screening & Lifestyle</div><div class="g2" style="gap:14px"><div><div style="font-size:11px;font-weight:700;margin-bottom:10px">Screening at Enrolment</div><div class="g2" style="gap:8px"><div class="fg"><label>Retinal Exam</label><select id="scr-ret" style="width:100%;padding:7px;border:1px solid var(--bdr);border-radius:7px;font-size:12px;font-family:inherit"><option value="false">Not done</option><option value="true">Done</option></select></div><div class="fg"><label>Date</label><input id="scr-ret-d" type="date" style="width:100%;padding:7px;border:1px solid var(--bdr);border-radius:7px;font-size:12px;font-family:inherit"></div></div><div class="g2" style="gap:8px"><div class="fg"><label>Foot Exam</label><select id="scr-foot" style="width:100%;padding:7px;border:1px solid var(--bdr);border-radius:7px;font-size:12px;font-family:inherit"><option value="false">Not done</option><option value="true">Done</option></select></div><div class="fg"><label>Date</label><input id="scr-foot-d" type="date" style="width:100%;padding:7px;border:1px solid var(--bdr);border-radius:7px;font-size:12px;font-family:inherit"></div></div><div class="fg"><label>Next Follow-up Date</label><input id="e-next" type="date" style="width:100%;padding:7px;border:1px solid var(--bdr);border-radius:7px;font-size:12px;font-family:inherit"></div></div><div><div style="font-size:11px;font-weight:700;margin-bottom:10px">Lifestyle Assessment</div><div class="g2" style="gap:8px"><div class="fg"><label>Diet Adherence (%)</label><select id="e-diet"><option value="">— select —</option><option value="20">Poor</option><option value="45">Fair</option><option value="70">Good</option><option value="90">Excellent</option></select></div><div class="fg"><label>Physical Activity (%)</label><select id="e-ex"><option value="">— select —</option><option value="15">Sedentary</option><option value="40">Light</option><option value="65">Moderate</option><option value="90">Active</option></select></div></div><div class="fg"><label>Smoking Status</label><select id="e-smoke" style="width:100%;padding:7px;border:1px solid var(--bdr);border-radius:7px;font-size:12px;font-family:inherit"><option>Never smoked</option><option>Current smoker</option><option>Ex-smoker</option></select></div><div class="fg"><label>Glucose Monitoring</label><select id="e-bgfreq" style="width:100%;padding:7px;border:1px solid var(--bdr);border-radius:7px;font-size:12px;font-family:inherit"><option>Not monitoring</option><option>1–2x/day</option><option>3–4x/day</option><option>CGM continuous</option></select></div></div></div>';}
 function p5(){
   saveVals();var d=_ed,name=d['e-name']||'New Patient',type=d['e-dm-type']||'T2';
   var mm={'m-met':'Metformin 1000mg','m-empa':'Empagliflozin 10mg','m-dapa':'Dapagliflozin 10mg','m-cana':'Canagliflozin 100mg','m-sema':'Semaglutide 0.5mg/wk','m-sema-oral':'Semaglutide 7mg PO','m-lira':'Liraglutide 1.2mg','m-dula':'Dulaglutide 0.75mg/wk','m-sita':'Sitagliptin 100mg','m-saxa':'Saxagliptin 5mg','m-glicla':'Gliclazide MR 60mg','m-glib':'Glibenclamide 5mg','m-glar':'Insulin Glargine','m-detem':'Insulin Detemir','m-piog':'Pioglitazone 15mg','m-aspart':'Insulin Aspart','m-lispro':'Insulin Lispro','m-pump':'Insulin Pump','m-hybrid':'Hybrid Closed-Loop Pump','m-mnt':'Medical Nutrition Therapy','m-nph':'Insulin NPH','m-rami':'Ramipril 5mg','m-lisi':'Lisinopril 10mg','m-vals':'Valsartan 80mg','m-losa':'Losartan 50mg','m-irbe':'Irbesartan 150mg','m-finer':'Finerenone 10mg','m-amlo':'Amlodipine 5mg','m-biso':'Bisoprolol 5mg','m-carve':'Carvedilol 6.25mg','m-hctz':'HCTZ 12.5mg','m-indap':'Indapamide 1.5mg','m-cloni':'Clonidine 75mcg','m-ator':'Atorvastatin 40mg','m-rosu':'Rosuvastatin 20mg','m-ezet':'Ezetimibe 10mg','m-asp':'Aspirin 81mg','m-bemp':'Bempedoic acid 180mg','m-feno':'Fenofibrate 145mg','m-pcsk9':'Evolocumab 140mg q2wk','m-ico':'Icosapent ethyl 2g BD','m-tirz':'Tirzepatide 5mg/wk','m-arni':'Sacubitril/Valsartan 49/51','m-spiro':'Spironolactone 25mg','m-clop':'Clopidogrel 75mg','m-preg':'Pregabalin 75mg BD','m-dulox':'Duloxetine 60mg'};
-  var meds=[];Object.keys(mm).forEach(function(id){if(d[id]===true||d[id]==='on')meds.push(mm[id]);});if(d['e-other-meds'])meds.push(d['e-other-meds']);if(!meds.length)meds=['To be determined at first visit'];
+  var meds=collectMeds(d);if(!meds.length)meds=['To be determined at first visit'];
   setTimeout(function(){doEnrollAI(d,meds,type);},400);
   return '<div class="fsec">Review & AI Analysis</div><div class="g2"><div class="card cp" style="background:var(--bll)"><div style="font-weight:800;font-size:15px;margin-bottom:8px">'+name+'</div><div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px"><span class="type-badge '+type+'">'+type+' DM</span><span class="chip ch-b">'+(d['e-age']||'?')+'y '+(d['e-sex']||'')+'</span></div><div style="font-size:11px"><b>HbA1c:</b> '+(d['e-hba1c']||'—')+'% · <b>BP:</b> '+(d['e-sbp']||'—')+'/'+(d['e-dbp']||'—')+'<br><b>eGFR:</b> '+(d['e-egfr']||'—')+' · <b>BMI:</b> '+(d['e-bmi']||'—')+'<br><b>Meds ('+meds.length+'):</b> '+meds.slice(0,2).join(', ')+(meds.length>2?' +'+( meds.length-2)+' more':'')+'</div></div><div id="enroll-ai-out"><div class="ai-panel"><div class="ai-hd"><div class="ai-ico">✦</div><div><div class="ai-title">AI Pre-Enrolment Analysis</div><div class="ai-sub">Generating…</div></div></div><div class="ai-loading"><div class="ai-dot"></div><div class="ai-dot"></div><div class="ai-dot"></div></div></div></div></div>';}
 async function doEnrollAI(d,meds,type){
@@ -1130,7 +1311,7 @@ function doEnroll(){
   saveVals();var d=_ed;if(!d['e-name']){toast('Missing name','Please fill required fields');return;}
   var type=d['e-dm-type']||'T2';
   var mm={'m-met':'Metformin 1000mg','m-empa':'Empagliflozin 10mg','m-dapa':'Dapagliflozin 10mg','m-cana':'Canagliflozin 100mg','m-sema':'Semaglutide 0.5mg/wk','m-sema-oral':'Semaglutide 7mg PO','m-lira':'Liraglutide 1.2mg','m-dula':'Dulaglutide 0.75mg/wk','m-sita':'Sitagliptin 100mg','m-saxa':'Saxagliptin 5mg','m-glicla':'Gliclazide MR 60mg','m-glib':'Glibenclamide 5mg','m-glar':'Insulin Glargine','m-detem':'Insulin Detemir','m-piog':'Pioglitazone 15mg','m-aspart':'Insulin Aspart','m-lispro':'Insulin Lispro','m-pump':'Insulin Pump','m-hybrid':'Hybrid Closed-Loop Pump','m-mnt':'Medical Nutrition Therapy','m-nph':'Insulin NPH','m-rami':'Ramipril 5mg','m-lisi':'Lisinopril 10mg','m-vals':'Valsartan 80mg','m-losa':'Losartan 50mg','m-irbe':'Irbesartan 150mg','m-finer':'Finerenone 10mg','m-amlo':'Amlodipine 5mg','m-biso':'Bisoprolol 5mg','m-carve':'Carvedilol 6.25mg','m-hctz':'HCTZ 12.5mg','m-indap':'Indapamide 1.5mg','m-cloni':'Clonidine 75mcg','m-ator':'Atorvastatin 40mg','m-rosu':'Rosuvastatin 20mg','m-ezet':'Ezetimibe 10mg','m-asp':'Aspirin 81mg','m-bemp':'Bempedoic acid 180mg','m-feno':'Fenofibrate 145mg','m-pcsk9':'Evolocumab 140mg q2wk','m-ico':'Icosapent ethyl 2g BD','m-tirz':'Tirzepatide 5mg/wk','m-arni':'Sacubitril/Valsartan 49/51','m-spiro':'Spironolactone 25mg','m-clop':'Clopidogrel 75mg','m-preg':'Pregabalin 75mg BD','m-dulox':'Duloxetine 60mg'};
-  var meds=[];Object.keys(mm).forEach(function(id){if(d[id]===true||d[id]==='on')meds.push(mm[id]);});if(d['e-other-meds'])meds.push(d['e-other-meds']);if(!meds.length)meds=['Review at first visit'];
+  var meds=collectMeds(d);if(!meds.length)meds=['Review at first visit'];
   var hba1c=parseFloat(d['e-hba1c'])||8.0,sbp=parseInt(d['e-sbp'])||135,egfr=parseInt(d['e-egfr'])||72;
   var risk=hba1c>9||egfr<30?'H':hba1c>7.5||sbp>150?'M':'L';
   var alerts=[];if(hba1c>9)alerts.push('HbA1c '+hba1c+'% — urgent intensification');if(sbp>150)alerts.push('BP '+sbp+' mmHg — antihypertensive review');if(egfr<45)alerts.push('eGFR '+egfr+' — CKD management needed');if(!meds.some(function(m){return /pagliflozin/i.test(m);}))alerts.push('SGLT2i not prescribed — consider CV/kidney benefit');
